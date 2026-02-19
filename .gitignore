@@ -1,1 +1,4 @@
 brainstorm/
+tools/*
+!tools/*.py
+!tools/*.sh

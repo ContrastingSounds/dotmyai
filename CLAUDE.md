@@ -19,11 +19,9 @@ This repo is saved at `~/.myai` and serves as the agent-independent store of all
 │   ├── skills/             # Agentic skills
 │   └── subagents/          # Subagents
 │
-├── rill/                # 
-│   ├── .claude  /       # rill template context
-│   ├── code_samples/       # Code samples for Rill's YAML files
-│   └── pyrill/             # Instructions on installing and using PyRill
-│       └── code_samples/   # Code samples the Rill's Python SDK
+├── ext/                 # Technology-specific resources
+│   ├── go/              # Go source for CLI tools; binaries build to tools/
+│   └── rill/            # Rill-specific resources and skills
 │
 ├── skills/              # Markdown skills and commands
 ├── templates/           # Markdown templates e.g. for PRD and plan docs
