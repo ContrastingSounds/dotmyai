@@ -1,5 +1,64 @@
 # LOCAL
 
+- Fav shell configs
+- Essential env vars
+- Rill Development
+- Dotfiles for config version control
+
+## Fav shell config
+
+### general
+
+```shell
+# Bare git repo for selected dotfiles
+alias dotfiles='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+
+alias ll='eza -al'
+alias ls='eza -al'
+alias lsd='eza --only-dirs */'
+alias lt='eza --tree'
+alias fzf='fzf --preview "bat --color=always {}"'
+
+# Essential repo locations
+alias c='cd ~/GitHub/CustomerGitHub'      # Customer projects
+alias k='cd ~/GitHub/KeyGitHub'           # Priority repos eg source code
+alias r='cd ~/GitHub/RillGitHub'          # General internal rill repos
+alias d='cd ~/GitHub/DemoGitHub'          # Demo code
+alias p='cd ~/GitHub/PersonalGitHub'      # Personal repos
+
+# CLI configuration
+export CLICOLOR=1
+
+# Load zsh colors
+autoload -U colors && colors
+
+# Load version control information
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:*' check-for-changes true
+zstyle ':vcs_info:git:*' formats '%F{yellow} %b%f %F{red}%u%f%F{green}%c%f'
+zstyle ':vcs_info:git:*' stagedstr '+'
+zstyle ':vcs_info:git:*' unstagedstr ''
+precmd() { vcs_info }
+
+alias jupy='uv run --with jupyter jupyter notebook'
+```
+
+### rill convenient
+
+```shell
+# Rill
+alias killrill='kill $(pgrep -f "rill start")'
+alias rsdemo='rill start ~/DemoGitHub/rill-examples/rill-openrtb-prog-ads'
+
+# ClickHouse
+alias ch='/usr/local/bin/clickhouse client --prompt="CH"'
+
+# DuckDB
+get_schema()
+get_sample()
+```
+
 ## Env Vars
 
 - Services
@@ -40,9 +99,9 @@ export RILL_TEST_MONO_TOKEN
 export RILL_TEST_MULTI_TOKEN
 ```
 
-#### Convenience functions for creating worktrees
+## Rill Development
 
-###### References
+###### Config references
 - Documented in ~/rill-worktree-setup.md
 - symlink to $RILL_WORKTREES/RILL-README.md for easy access during dev work
 
