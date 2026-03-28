@@ -57,11 +57,13 @@ tbc
 
 ## Test
 
-TODO: Investigate use of hooks in Claude and GitHub for automated testing
+Testing is the primary feedback loop for verifying agent-generated code.
 
-- AI will write lots of tests for you
-- It also has a bad habit of ignoring, faking or misrepresenting test results
-- Make sure your project as test routines and use them often
+- Read `ai/instructions/testing-strategy.md` for the full strategy
+- Run tests after each meaningful change (catch failures early)
+- Every bug fix requires a regression test
+- Never weaken or skip tests to make them pass
+- Always verify actual test output — don't trust summaries
 
 ## CI/CD
 
