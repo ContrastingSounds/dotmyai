@@ -5,7 +5,7 @@
 - Rill Development
 - Dotfiles for config version control
 
-## Fav shell config
+## zsh hell config
 
 ### general
 
@@ -44,7 +44,7 @@ precmd() { vcs_info }
 alias jupy='uv run --with jupyter jupyter notebook'
 ```
 
-### rill convenient
+### rill convenience functions
 
 ```shell
 # Rill
@@ -106,10 +106,27 @@ export RILL_TEST_MULTI_TOKEN
 - Documented in ~/rill-worktree-setup.md
 - symlink to $RILL_WORKTREES/RILL-README.md for easy access during dev work
 
-###### ~/.zshrc functions 
-- **prw()** — for existing pull request
+###### ~/.zshrc Git worktree helper
+
+- **prw()** — Checkout a PR into a named worktree
+```shell
+prw 8664
+```
+
+- **frw()** — checkout a remote branch into a named worktree
+```shell
+frw feat-new-dashboard
+```
 - **frw()** — for existing branch
-- **newb()** — new branch
+
+- **newb()** — create a new branch + worktree from latest main
+```shell
+newb feat-my-feature
+```
+
+###### ~/.zshrc DuckDB Convenience Functions
+- **get_schema()** — get schema of a parquet file using DuckDB
+- **get_sample()** — get a one row sample from a parquet file using DuckDB
 
 ## .dotfiles
 
