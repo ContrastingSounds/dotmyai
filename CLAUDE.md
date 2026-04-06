@@ -6,12 +6,14 @@ This repo is saved at `~/.myai` and serves as the agent-independent store of all
 
 .myai/
 ├ CLAUDE.md              # This file; instructions on how to use the knowledge store
-├ DEV_WORKFLOW.md        # Summary of my generic agentic development process
 ├ INTEGRATIONS.md        # Primary tools for development environment
 ├ LOCAL.md               # Notes on machine configuration e.g. notes on .zshrc
-├ REFERENCES.md          # External tools, libraries, docs
-├── .beads/              # Folder for beads: https://github.com/steveyegge/beads
-├── guidelines/          # Idiomatic coding guidelines and snippets
+│
+├── docs/                # dotmyai docs for humans
+│   └── REFERENCES.md       # External tools, libraries, docs
+│
+├── project-docs/        # Quick reference docs for humans to use in a code repo's docs folder
+├────── DEV_WORKFLOW.md     # Summary of my generic agentic development process
 ├── project-ai/          # Folder structure to use in a code repo's ai folder
 │   ├── brainstorms/        # For persisting docs from "loose" work and casual research
 │   ├── designs/            # PRDs and other "slow-changing" requirements and designs
@@ -23,10 +25,14 @@ This repo is saved at `~/.myai` and serves as the agent-independent store of all
 │   ├── skills/             # Agentic skills
 │   └── subagents/          # Subagents
 │
+├── lang-guides/         # Idiomatic coding guidelines and snippets
+│
 ├── ext/                 # Technology-specific resources
-│   ├── go/              # Go source for CLI tools; binaries build to tools/
+│   ├── dotmyai/         # Go source for CLI tools; binaries build to tools/
+│   ├── linear/          # How to use Linear with Claude across multiple projects
 │   └── rill/            # Rill-specific resources and skills
 │
+├── commands/            # Markdown commands
 ├── skills/              # Markdown skills and commands
 ├── templates/           # Markdown templates e.g. for PRD and plan docs
-├── tools/               # Deterministic tooling eg Go, Python, TypeScript
+└── tools/               # Deterministic tooling eg Go, Python, TypeScript
