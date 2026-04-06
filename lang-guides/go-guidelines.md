@@ -7,7 +7,7 @@ and maintainability across all Go projects.
 
 ## Preferred Libraries
 
-- **CLI arguments**: stdlib `flag` for simple tools. Use [cobra](https://github.com/spf13/cobra) only when the tool genuinely needs subcommands. Avoid viper.
+- **CLI arguments**: stdlib `flag` for quick tools is fine. Have standarised on using [cobra](https://github.com/spf13/cobra). Always when the tool needs subcommands, and when moving quickly on defaults. Avoid viper generally, unless there is a specific need for it.
 - **Logging**: stdlib `log/slog` for structured logging. Avoid logrus.
 - **File paths**: stdlib `path/filepath`. Always use `filepath.Clean` on user-supplied paths.
 - **Testing**: stdlib `testing`. No third-party assertion libraries needed.
