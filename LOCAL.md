@@ -71,6 +71,7 @@ get_sample()
 ```shell
 export OPENAI_API_KEY
 export LINEAR_API_KEY
+export LINEAR_API_KEY_PERSONAL
 export CURSOR_API_KEY
 export GEMINI_API_KEY
 export GOOGLE_APPLICATION_CREDENTIALS

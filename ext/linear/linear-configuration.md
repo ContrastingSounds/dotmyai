@@ -13,8 +13,9 @@ API keys are generated in Linear: Settings > Security & Access > Personal API ke
 
 To use different Linear accounts per project (e.g., work vs personal), disable the global Linear plugin and use project-level `.mcp.json` files with API key auth.
 
-### Project `.mcp.json`
+If both projects may be open in the same shell session, use distinct env var names:
 
+**Work project:**
 ```json
 {
   "linear": {
@@ -27,25 +28,6 @@ To use different Linear accounts per project (e.g., work vs personal), disable t
 }
 ```
 
-Each project sets `LINEAR_API_KEY` to the API key from the corresponding Linear account via environment variable.
-
-### Using Different Env Var Names
-
-If both projects may be open in the same shell session, use distinct env var names:
-
-**Work project:**
-```json
-{
-  "linear": {
-    "type": "http",
-    "url": "https://mcp.linear.app/mcp",
-    "headers": {
-      "Authorization": "Bearer ${LINEAR_WORK_KEY}"
-    }
-  }
-}
-```
-
 **Personal project:**
 ```json
 {
@@ -53,7 +35,7 @@ If both projects may be open in the same shell session, use distinct env var nam
     "type": "http",
     "url": "https://mcp.linear.app/mcp",
     "headers": {
-      "Authorization": "Bearer ${LINEAR_PERSONAL_KEY}"
+      "Authorization": "Bearer ${LINEAR_API_KEY_PERSONAL}"
     }
   }
 }
