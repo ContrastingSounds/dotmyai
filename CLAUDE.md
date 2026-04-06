@@ -1,8 +1,8 @@
-# MYAI (pronounced: "My Eye")
+# DOTMYAI (pronounced: "Dot My Eye")
 
 This repo is saved at `~/.myai` and serves as the agent-independent store of all common knowledge that the developer using this machine wants to use across multiple projects, agents, programming languages, and so on.
 
-## Folder Structure (PLANNED)
+## Folder Structure
 
 .myai/
 ├ CLAUDE.md              # This file; instructions on how to use the knowledge store
