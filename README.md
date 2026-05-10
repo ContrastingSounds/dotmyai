@@ -17,8 +17,7 @@ It roughly follows a classic enterprise architecture link of thinking, with the 
 ```
 .myai/
 ├ CLAUDE.md              # This file; instructions on how to use the knowledge store
-├ INTEGRATIONS.md        # Primary tools for development environment
-├ LOCAL.md               # Notes on machine configuration e.g. notes on .zshrc
+├ LOCAL-ENV.md               # Notes on machine configuration e.g. notes on .zshrc
 │
 ├── docs/                # dotmyai docs for humans
 │   ├── INTEGRATIONS.md     # Notes on frequently used apps and services (eg Linear, DuckDB)
