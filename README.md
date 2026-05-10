@@ -16,35 +16,24 @@ It roughly follows a classic enterprise architecture link of thinking, with the 
 
 ```
 .myai/
-├ CLAUDE.md              # This file; instructions on how to use the knowledge store
-├ LOCAL-ENV.md               # Notes on machine configuration e.g. notes on .zshrc
+├ CLAUDE.md              # Agentic instructions on how to use the knowledge store
+├ LOCAL-ENV.md           # Notes on machine configuration e.g. notes on .zshrc
+├ README.md              # This file; human instructions on how to use the knowledge store
 │
 ├── docs/                # dotmyai docs for humans
+│   ├── DEV_WORKFLOW.md     # Summary of my generic agentic development process
 │   ├── INTEGRATIONS.md     # Notes on frequently used apps and services (eg Linear, DuckDB)
 │   └── REFERENCES.md       # External tools, libraries, docs
 │
-├── project-docs/        # Quick reference docs for humans to use in a code repo's docs folder
-├────── DEV_WORKFLOW.md     # Summary of my generic agentic development process
-├── project-ai/          # Folder structure to use in a code repo's ai folder
-│   ├── brainstorms/        # For persisting docs from "loose" work and casual research
-│   ├── designs/            # PRDs and other "slow-changing" requirements and designs
-│   ├── plans/              # Formal agentic plans to be converted directly into actions
-│   ├── reviews/            # Outputs of reviews and quality checks
-│   │   
-│   ├── instructions/       # Markdown files providing guidance on various topics
-│   ├── tools/              # Deterministic tools, typically in Python and Go
-│   ├── skills/             # Agentic skills
-│   └── subagents/          # Subagents
+├── dotclaude/           # Quick reference docs for humans to use in a code repo's docs folder
+│   ├── commands/            # Markdown commands
+│   └── skills/              # Markdown skills and commands
 │
 ├── lang-guides/         # Idiomatic coding guidelines and snippets
-│
-├── ext/                 # Technology-specific resources
-│   ├── dotmyai/         # Go source for CLI tools; binaries build to tools/
-│   ├── linear/          # How to use Linear with Claude across multiple projects
-│   └── rill/            # Rill-specific resources and skills
-│
-├── commands/            # Markdown commands
-├── skills/              # Markdown skills and commands
+├── external/            # Technology-specific resources
 ├── templates/           # Markdown templates e.g. for PRD and plan docs
 └── tools/               # Deterministic tooling eg Go, Python, TypeScript
+    ├── go/                  # Go
+    ├── python/              # Python (prefering uv tools)
+    └── scripts/             # Shell scripts
 ```
