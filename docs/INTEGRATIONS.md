@@ -3,7 +3,6 @@
 **Development**
 - Slack
 - Linear
-- Notion
 - GitHub
 - Figma
 
