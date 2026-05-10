@@ -54,6 +54,34 @@ link() {
     echo "LINK:   $target -> $src"
 }
 
+generate_docs() {
+    local docs_file="$MYAI_DIR/docs/DOTCLAUDE.md"
+
+    printf "# Global Claude Commands & Skills\n" > "$docs_file"
+
+    printf "\n###### commands\n\n" >> "$docs_file"
+    for file in "$DOTCLAUDE_DIR"/commands/*.md; do
+        [ -e "$file" ] || continue
+        local name
+        name=$(basename "$file" .md)
+        local desc
+        desc=$(sed -n 's/^description: *//p' "$file" | head -1)
+        printf "**%s**\n%s\n\n" "$name" "$desc" >> "$docs_file"
+    done
+
+    printf "###### skills\n\n" >> "$docs_file"
+    for file in "$DOTCLAUDE_DIR"/skills/*.md; do
+        [ -e "$file" ] || continue
+        local name
+        name=$(basename "$file" .md)
+        local desc
+        desc=$(sed -n 's/^description: *//p' "$file" | head -1)
+        printf "**%s**\n%s\n\n" "$name" "$desc" >> "$docs_file"
+    done
+
+    echo "DOCS:   $docs_file"
+}
+
 echo "Installing dotclaude symlinks..."
 echo ""
 
@@ -69,6 +97,8 @@ merge_dir "$DOTCLAUDE_DIR/skills"   "$CLAUDE_DIR/skills"
 link "$DOTCLAUDE_DIR/commands"  "$CLAUDE_DIR/commands"
 link "$DOTCLAUDE_DIR/skills"    "$CLAUDE_DIR/skills"
 link "$DOTCLAUDE_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+
+generate_docs
 
 echo ""
 echo "Done. Run 'git status' in $MYAI_DIR to see any newly merged files."
