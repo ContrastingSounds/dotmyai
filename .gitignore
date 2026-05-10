@@ -1,5 +1,1 @@
-brainstorm/
-tools/*
-!tools/*.py
-!tools/*.sh
 settings.local.json
