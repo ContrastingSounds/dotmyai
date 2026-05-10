@@ -4,6 +4,6 @@ This developer keeps their global development preferences in the `~/.myai` direc
 These should referred to as relevant to each coding task.
 
 - `~/.myai` - Main directory for local development guidelines
-- `~/.myai/guidelines` - Guidelines for Go, Python
-- `~/.myai/skills`
-- `~/.myai/tools`
+- `~/.myai/docs/DEV_WORKFLOW.md` - Guidelines for Go, Python
+- `~/.myai/lang-guides` - Guidelines for Go, Python
+
