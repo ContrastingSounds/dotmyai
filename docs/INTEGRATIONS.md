@@ -9,4 +9,3 @@
 **Data**
 - GCS
 - DuckDB
-- ClickHouse
