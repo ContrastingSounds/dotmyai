@@ -23,121 +23,119 @@ The target project should have a CLAUDE.md with:
 
 Without a CLAUDE.md, review agents still work but produce weaker, less project-specific findings.
 
-## Starting a Review
-
-State your intent — the agent picks the right tools based on the diff size and context.
+## Review Commands
 
 **Always review in a separate session from the one that wrote the code.** Writer/reviewer separation eliminates confirmation bias. Start a fresh session or use a different worktree.
 
-### From a local branch (pre-PR)
+### Step 1: Quick review (`/review`)
 
-Best when you're still iterating and haven't pushed yet.
-
-```
-Review my changes on this branch
-```
-
-The agent checks your branch diff against main, runs a review pass, and reports findings. For small diffs it does a single pass; for larger changes it may run multiple specialist agents in parallel.
-
-### From a PR number
-
-Best when reviewing your own PR before requesting human review, or reviewing someone else's work.
+Run this first for every review. It's a bundled Claude Code skill that reviews all pending changes on the current branch.
 
 ```
-Review PR #42
+/review
 ```
 
-or
+- Reads `git diff main` and analyzes all changed files
+- Checks style, bugs, missing error handling, CLAUDE.md compliance
+- Reports findings with file:line references
+- No setup beyond being on a branch with changes
+
+For a PR you haven't checked out locally:
 
 ```
 /review PR#42
 ```
 
-The agent fetches the PR diff, reviews it, and reports in-session.
+### Providing review context
 
-### Full multi-agent review
-
-Best as a final pre-merge check on an existing PR. Runs the full pipeline — multiple parallel agents with confidence-scored findings.
+When you know what matters, tell the agent before running a review command:
 
 ```
-/code-review
+This change adds JSONL event logging to the simulation loop. Focus on:
+- Whether every state mutation is captured (transitions, field updates, new entities)
+- Whether the log is reconcilable — replaying it from initial state should reproduce final CSV output
+- Error handling in the EventLogWriter (file I/O failures during simulation)
+
+/review
 ```
 
-or
+The agent uses this guidance to prioritise findings. Without it, the review is generic.
+
+### Step 2: Targeted specialist review (`/pr-review-toolkit:review-pr`)
+
+Run after `/review` for non-trivial changes. This plugin auto-detects which specialist agents to run based on what files changed.
 
 ```
 /pr-review-toolkit:review-pr
 ```
 
-`/code-review` posts a formatted review comment directly on the PR (requires an open, non-draft PR). `/pr-review-toolkit:review-pr` reports back in-session without posting.
+What it does:
+- Reads the diff to determine which specialists are relevant
+- Spawns agents sequentially based on changed file types:
 
-## What the Agent Does
+| Files changed            | Agent spawned            | What it checks                              |
+|--------------------------|--------------------------|---------------------------------------------|
+| Any files                | `code-reviewer`          | CLAUDE.md compliance, bugs, quality (always) |
+| Error handling / catch   | `silent-failure-hunter`  | Suppressed errors, empty catch, bad fallbacks |
+| Type definitions         | `type-design-analyzer`   | Encapsulation, invariant expression          |
+| Test files               | `pr-test-analyzer`       | Coverage gaps, missing edge cases            |
+| Comments / docstrings    | `comment-analyzer`       | Comment accuracy, staleness, rot             |
+| After all pass           | `code-simplifier`        | Clarity, maintainability                     |
 
-Understanding what happens behind the scenes helps you interpret results and steer follow-up.
+- Aggregates results into: Critical Issues | Important Issues | Suggestions | Strengths
+- Reports in-session (does not post to GitHub)
 
-### Review pipeline
+### Step 3: Full pipeline review (`/code-review`)
 
-1. **Diff analysis** — checks branch diff size and what areas changed
-2. **Single or multi-pass** — small diffs get one pass; 100+ lines trigger parallel specialist agents
-3. **Confidence filtering** — findings scored below 80% confidence are filtered out to reduce noise
-4. **Structured output** — each finding includes file:line, severity, description, recommendation
+Run as a final pre-merge check on an existing, open PR. This is the most thorough option.
 
-### Specialist agents
+```
+/code-review
+```
 
-These run automatically when relevant, or you can request them directly for follow-up.
+What it does:
+- Checks PR eligibility (skips draft, closed, trivial, or already-reviewed PRs)
+- Spawns 5 parallel Sonnet agents:
+  1. CLAUDE.md compliance audit
+  2. Shallow scan for obvious bugs in changed lines only
+  3. Git blame/history analysis for context-based bugs
+  4. Review of previous PR comments on same files
+  5. Code comment compliance check
+- Each finding scored 0-100 for confidence
+- Only findings ≥80 confidence pass the filter
+- **Posts a formatted review comment on the PR via `gh`**
+- Requires: open, non-draft PR with `gh` authenticated
 
-| Agent | Focus |
-|-------|-------|
-| `silent-failure-hunter` | Suppressed errors, empty catch blocks, bad fallbacks |
-| `type-design-analyzer` | Type encapsulation, invariant expression |
-| `pr-test-analyzer` | Test coverage gaps, missing edge cases |
-| `comment-analyzer` | Comment accuracy, stale comments, comment rot |
-| `code-reviewer` | Style, guidelines, CLAUDE.md compliance |
-| `code-simplifier` | Clarity, maintainability, unnecessary complexity |
+### Security review (`/security-review`)
 
-Bundled extras (not part of the pipeline, run on request):
-- `/security-review` — security-focused analysis of pending branch changes
+Run alongside any of the above when changes touch auth, input handling, or data access.
+
+```
+/security-review
+```
+
+Analyzes pending branch changes for security vulnerabilities: injection, auth flaws, credential exposure, insecure data handling.
 
 ## Working with Findings
 
-The initial review gives you a prioritised list. From there, go deeper or act.
+After a review, you have a prioritised list of findings. Use the specialist agents to drill deeper into specific areas, then decide what to fix now vs capture for later.
 
-### Drilling down
+### Drill deeper with a specific agent
 
-Ask the agent to expand on specific findings:
-
-```
-Tell me more about finding #3
-
-Show me the code around that error handling issue
-
-Run the silent-failure-hunter on just pkg/fsm/
-
-Is this actually a problem or a false positive?
-```
-
-### Fixing in-session
-
-- **Your own code**: fix directly in the review session, then re-run the review to verify the fix. Or switch to the writer session/worktree to fix there.
-- **Someone else's code**: document findings and create Linear issues. Don't fix — the author should.
-
-### Verifying fixes
-
-After addressing findings:
+If a finding warrants deeper investigation, invoke the relevant specialist directly. These are the same agents from Step 2 but scoped to a specific file or area:
 
 ```
-Re-run the review to check if the issues are resolved
+Use the silent-failure-hunter agent to review the error handling in pkg/fsm/simulation.go
+
+Use the type-design-analyzer to review the Instance and StateMachine types in pkg/fsm/types.go
+
+Use the pr-test-analyzer to check test coverage for pkg/fsm/eventlog.go
 ```
 
-### Post-review polish
+### Fix and re-verify
 
-Once review findings are addressed, a clarity pass catches different issues (naming, structure, redundancy):
+Fix in the writer session/worktree, then re-run `/review` in the review session to verify.
 
-```
-/simplify
-```
-
-This changes code — run it in the writer session, not the review session.
 
 ## Capturing Findings in Linear
 
@@ -155,7 +153,7 @@ Not every finding needs a Linear issue. Capture findings that need work beyond t
 Ask the agent directly — it uses `save_issue` and `save_comment` MCP tools:
 
 ```
-Create a Linear issue in ContrastingSounds for finding #2
+Create a Linear issue in the Mock Machines project for finding #2
 
 Add this finding as a comment on CON-42
 
