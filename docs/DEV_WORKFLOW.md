@@ -4,17 +4,9 @@
 
 **Note** Claude Code uses git worktrees when spinning up agents to perform work, but Claude Code worktrees should *only* be used for Claude by Claude. When directly starting up a new branch or worktree, use git, gh, and convenience functions in ~/.zshrc
 
-- Starting a new branch & worktree
-  - cleaning up the branch & worktree after
+- Working with branches & worktrees
 - Cloning PRs
 - Cloning branches
-
-### Work Source Code (rill)
-
-#### convenience functions
-- **`local-tree <branch>`** — New branch from latest main. Runs `_rill_wt_setup` (symlinks shared `.claude/` config, copies `settings.local.json`, `npm install`, `make cli`).
-- **`branch-tree <branch>`** — Checkout an existing remote branch into a worktree. For reviewing or continuing someone else's work.
-- **`pr-tree <pr-number>`** — Checkout a PR by number. Fetches PR metadata via `gh` to name the worktree `pr-<number>-<slug>`.
 
 ### General Purpose
 
@@ -39,6 +31,23 @@ git worktree remove ../<repo>-<branch>   # remove worktree + directory
 git branch -d <branch>                   # delete branch (safe; checks merge status)
 git worktree prune                       # optional; cleans stale metadata
 ```
+
+### Worktree Shared-Resource Gotchas
+
+When running multiple worktrees (especially parallel agents), watch for
+shared-resource conflicts:
+
+- **Ports**: Integration tests binding to fixed ports will collide. Use dynamic
+  port assignment or environment variables per worktree.
+- **Databases**: Each worktree needs its own database name or schema for
+  integration tests. Don't share a test database across parallel agents.
+- **Docker daemon**: Parallel Dockerfile builds or container name conflicts.
+  Use worktree-specific container name prefixes.
+- **Package caches**: Generally shared safely, but parallel `go mod download`
+  or `npm install` can race. Usually harmless but can cause transient errors.
+- **Disk budget**: Each worktree is a full copy of the working tree (not the
+  `.git` directory). Budget ~5GB per worktree beyond base repo size for
+  large projects.
 
 ### Claude notes version control
 
@@ -123,6 +132,13 @@ artifacts.
 - `designs` are permanent, evolving documents that represent the goal
 - `plans` are temporory, frequently archived documents for meeting the goal
 
+**Context management**: Plan in one session, then start implementation in a
+fresh session (`/clear`) with only the plan loaded. This keeps the context
+window focused on code, not conversation history. After 2 failed corrections,
+`/clear` and write a better initial prompt rather than accumulating stale context.
+Use `/compact <instructions>` with focus directives when the context window grows
+large mid-session.
+
 ### Develop
 
 For serious development tasks (but not necessarily minor ones), some form
@@ -138,6 +154,15 @@ The working assumptions of myai are:
   - They are more detailed and also more ephmeral than Linear issues
   - beads epics are "less epic" than in Linear, more akin to issues and projects
 - Development may take place over session sessions and context refreshes
+
+**Agentic coding loop**: The core iteration pattern for agent-assisted development:
+
+1. Pick a task from the plan or TODO list
+2. Implement the change
+3. Run tests / build / lint (provide the verification command in the prompt)
+4. If pass → commit → move to next task
+5. If fail → fix → re-run (max 2 attempts, then rethink the approach)
+6. After committing, consider whether context has grown stale — `/clear` if so
 
 ### Debug
 
@@ -156,3 +181,81 @@ Testing is the primary feedback loop for verifying agent-generated code.
 ### CI/CD
 
 - AI is quite good at developing GitHub actions for CI/CD automation
+
+**Reference pipeline stages** (adapt per language):
+
+1. **Lint**: language-specific linter (`golangci-lint run`, `ruff check`, `oxlint`)
+2. **Test**: full suite with race detection where applicable (`go test -race -cover ./...`)
+3. **Security**: vulnerability scanning (`govulncheck ./...`, `pip-audit`, `npm audit`)
+4. **Build**: compile / bundle
+5. **Release**: on tag push only
+
+**Self-correcting CI**: When a CI build fails, the agent analyzes logs, proposes
+a fix, commits it, and re-runs. Use a deterministic marker (e.g., a passing test
+suite) to signal halt. This pattern saved Elastic ~20 days of engineering work
+in the first month.
+
+**Practical tips**:
+- Use `concurrency` with `cancel-in-progress: true` in GitHub Actions to cut
+  monthly CI minutes 30-50%
+- Pin action versions to commit SHAs, not tags (tags can be retargeted)
+- Use `go-version-file: go.mod` instead of hardcoded Go versions
+- For `go generate`: commit generated code and verify with
+  `go generate ./... && git diff --exit-code` in CI
+- See `templates/go-ci.yml` for a reference GitHub Actions workflow
+
+### Code Review
+
+**Writer/reviewer separation**: Use separate sessions for writing and reviewing.
+A fresh context eliminates confirmation bias toward code you just wrote. This
+is the single most impactful review practice.
+
+**Risk-based scope**: Scale review depth to change size:
+- Trivial (≤10 lines): quick scan
+- Lite (≤100 lines): focused review
+- Full (100+ lines): multi-pass review with security and architecture checks
+
+**What AI review can and cannot do**:
+- Good at: style consistency, common bugs, missing error handling, test coverage gaps
+- Cannot replace humans for: architectural alignment, cross-system contract changes,
+  subtle concurrency bugs, design validation
+
+**Review process** — 3 steps, scaled to change size:
+
+| Step | Tool | When to use |
+|------|------|-------------|
+| 1. Quick review | `/review` (bundled) | Every PR-ready change, before pushing. Zero setup. |
+| 2. Deep review | `pr-review-toolkit:code-reviewer` (plugin) | Non-trivial PRs (100+ lines), or changes to error handling / concurrency / security-sensitive code. |
+| 3. Error audit | `pr-review-toolkit:silent-failure-hunter` (plugin) | Any PR touching error handling, catch blocks, fallback logic, or retry paths. Especially valuable for Go where agent-generated code has 2x the error handling issues. |
+
+Step 1 is always. Steps 2–3 are additive based on risk. For trivial changes (≤10 lines), a quick scan without tools is fine.
+
+### Skills and Commands Worth Knowing
+
+**Bundled skills** (ship with Claude Code, always available):
+- `/simplify` — parallel agents review changed files for reuse and quality
+- `/review [PR]` — local PR review
+- `/security-review` — security analysis of pending branch changes
+
+**Official plugins** (install to add):
+- `code-review` — multi-agent pipeline: pre-screen → summarize → 4 parallel reviewers → validation
+- `pr-review-toolkit` — 6 specialized agents (comment-analyzer, test-analyzer, silent-failure-hunter, type-design-analyzer, code-reviewer, code-simplifier)
+- `feature-dev` — 7-phase feature development with parallel exploration and architecture agents
+- `commit-commands` — `/commit`, `/commit-push-pr`, `/clean_gone`
+- `claude-code-setup` — analyzes a codebase and recommends automations
+
+**Community skills**:
+- `cc-skills-golang` (samber) — Go-specific agent instructions, reduced errors 41-43% in benchmarks
+
+**Plugin hygiene**: Keep 2-3 active plugins max. Use `skillOverrides` to set
+unused skills to `"name-only"` or `"off"` to avoid context pollution.
+
+**When to add automation** (progressive adoption):
+
+| Trigger | Add |
+|---------|-----|
+| Agent gets a convention wrong twice | CLAUDE.md rule |
+| You keep typing the same prompt | Skill |
+| A side task floods your conversation | Subagent |
+| Something must happen every time | Hook |
+| A second repo needs the same setup | Plugin |

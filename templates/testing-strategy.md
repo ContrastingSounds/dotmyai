@@ -50,14 +50,19 @@ prevents the same bug from returning.
 
 ### 6. Test at the Right Level
 
-| Level | What it tests | When to use |
-|-------|--------------|-------------|
-| Unit | Single function/method in isolation | Pure logic, transformations, calculations |
-| Integration | Multiple components working together | Database queries, API handlers, pipelines |
-| End-to-end | Full system behavior | Critical user paths, deploy verification |
+| Level | What it tests | When to use | Mechanism |
+|-------|--------------|-------------|-----------|
+| Unit | Single function/method in isolation | Pure logic, transformations, calculations | In-process, no I/O |
+| Integration | Multiple components working together | Database queries, API handlers, pipelines | Real dependencies, test containers or fixtures |
+| End-to-end | Full system behavior | Critical user paths, deploy verification | Full stack, browser or HTTP client |
 
 Prefer unit tests for speed and precision. Use integration tests for
 correctness at boundaries. Use e2e tests sparingly for high-value paths.
+
+**When to run each tier**:
+- Unit: every code change, pre-commit
+- Integration: pre-push, CI
+- E2e: CI only, or manually before release
 
 ### 7. Mock at Boundaries, Not Internals
 
@@ -71,6 +76,52 @@ tests that break on refactoring and pass on real bugs.
 - Keep fixtures small and focused — one scenario per fixture
 - Never use production data in tests
 - For database tests, use transactions that roll back or isolated test databases
+
+## Provide a Verification Command
+
+The single highest-leverage thing you can do for agent-assisted development
+is give the agent a way to verify its own work. Include a test command, lint
+command, or build command in every task prompt. Agents perform dramatically
+better when they can run verification after each change.
+
+Example prompt suffix: *"Verify with `go test -race ./...` after each change."*
+
+## Go-Specific Testing Patterns
+
+- **Fuzz testing**: Use `func FuzzXxx(f *testing.F)` for input validation,
+  parsers, and serialization. Add seed corpus entries for known edge cases.
+- **Integration test gating**: Use `testing.Short()` to skip slow tests
+  during rapid iteration: `if testing.Short() { t.Skip("skipping integration test") }`.
+  Run the full suite with `go test ./...` (no `-short` flag) in CI.
+- **Binary coverage**: Use `go build -cover` + `GOCOVERDIR` to measure
+  integration/e2e test coverage against the compiled binary, not just
+  unit test coverage.
+- **Race detector**: Always run with `-race` in CI. Agent-generated Go code
+  has 2x the concurrency errors of human-written code.
+
+## Agent-Specific Anti-Patterns
+
+### Tests from the same prompt as the implementation
+
+When the agent generates both the code and the tests in one pass, they share
+the same blind spots. The agent writes tests that validate its understanding
+of the requirement — not the requirement itself. Mitigate by: writing tests 
+in a separate session, or reviewing tests with fresh eyes before trusting them.
+
+### Hallucinated dependencies
+
+Agents hallucinate ~20% of package names. A test that imports a non-existent
+package will fail to compile (best case) or pull in a malicious package
+registered under the hallucinated name ("slopsquatting"). Always verify
+that test imports resolve to real, intended packages.
+
+### Tautological test generation
+
+Agents tend to generate tests that mirror the implementation rather than
+test behavior. Watch for: tests that construct the expected output using
+the same logic as the function under test, assertions on implementation
+details rather than observable behavior, and tests that pass regardless
+of the function's return value.
 
 ## Enforcement
 

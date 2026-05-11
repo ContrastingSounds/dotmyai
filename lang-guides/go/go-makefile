@@ -1,0 +1,44 @@
+# Reference Makefile for Go projects.
+# Copy to your project root and adjust BINARY/PACKAGE as needed.
+
+BINARY  ?= myapp
+PACKAGE ?= ./cmd/$(BINARY)
+COVER   ?= coverage.out
+
+.PHONY: all build test lint vet vuln generate cover clean fmt help
+
+all: lint vet test build ## Run lint, vet, test, and build
+
+build: ## Build the binary
+	go build -o $(BINARY) $(PACKAGE)
+
+test: ## Run tests with race detector
+	go test -race -cover ./...
+
+lint: ## Run golangci-lint
+	golangci-lint run
+
+vet: ## Run go vet
+	go vet ./...
+
+vuln: ## Run govulncheck
+	govulncheck ./...
+
+generate: ## Run go generate and verify no diff
+	go generate ./...
+	@git diff --exit-code || (echo "go generate produced changes; commit them" && exit 1)
+
+cover: ## Generate coverage report and open in browser
+	go test -race -coverprofile=$(COVER) ./...
+	go tool cover -html=$(COVER)
+
+fmt: ## Format code
+	golangci-lint fmt
+
+clean: ## Remove build artifacts
+	rm -f $(BINARY) $(COVER)
+	go clean -cache -testcache
+
+help: ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'

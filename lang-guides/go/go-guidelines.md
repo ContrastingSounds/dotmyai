@@ -38,7 +38,7 @@ Stdlib, then third-party, then local — separated by blank lines. Enforced by `
 ## Style & Formatting
 
 - **`gofmt`/`goimports`** are mandatory — code must be formatted before commit.
-- **`golangci-lint`** for static analysis.
+- **`golangci-lint`** v2 for static analysis (see golangci-lint section below).
 - **Package names**: short, lowercase, singular. No `_` or `mixedCaps`. The package name should not repeat the import path (`pathutil`, not `pathutilpkg`).
 - **Exported names**: `PascalCase`. Unexported: `camelCase`.
 - **No stuttering**: `http.Client`, not `http.HTTPClient`. `pathutil.Clean`, not `pathutil.PathClean`.
@@ -146,21 +146,28 @@ func run() error {
 
 ## Project Structure
 
-Standard layout for applications:
+Start flat and add structure when you feel the pain, not before:
 
 ```
 project/
 ├── go.mod
-├── cmd/              # Entry points (one subdir per binary)
+├── main.go           # Single-binary projects can start here
+├── cmd/              # Multiple entry points (one subdir per binary)
 │   └── myapp/
 │       └── main.go
-├── internal/         # Private packages (not importable by other modules)
-│   ├── config/
-│   └── handler/
-└── pkg/              # Public packages (importable by other modules, use sparingly)
+└── internal/         # Private packages (compiler-enforced, not importable by other modules)
+    ├── config/
+    └── handler/
 ```
 
-For libraries, keep it flat — no `cmd/`, no `internal/` unless the package is large.
+**Do not use `pkg/`**. Since `internal/` was added, everything not in `internal/`
+is already public — `pkg/` carries zero information and pollutes every import
+path. The Go standard library, compiler, and core tools don't use it. The
+"golang-standards/project-layout" repo is community-run with no Go team
+affiliation; the Go tech lead has publicly criticized it.
+
+For libraries, keep it flat — no `cmd/`, no `internal/` unless the package is
+large. Avoid deep nesting like `internal/services/user/handlers/http/v1/`.
 
 ## Dependencies
 
@@ -176,6 +183,106 @@ For libraries, keep it flat — no `cmd/`, no `internal/` unless the package is 
 - Validate all external inputs before use.
 - Be careful with `os/exec` — avoid passing unsanitized input to shell commands. Prefer `exec.Command` with separate args over shell invocation.
 - Use `crypto/rand` for security-sensitive random values, never `math/rand`.
+
+## golangci-lint v2
+
+golangci-lint v2 (March 2025) changed the config structure. Key differences:
+
+- `enable-all`/`disable-all` replaced by `linters.default` accepting `"all"`,
+  `"standard"`, `"none"`, `"fast"`
+- New `golangci-lint fmt` command
+- Migration: run `golangci-lint migrate` to convert v1 configs
+
+**Recommended baseline**: `default: standard` plus enable `gosec`, `gocyclo`
+(min-complexity: 15), `revive`, `gocritic`. See `templates/golangci-lint.yml`
+for a reference config.
+
+## go generate in CI
+
+Commit generated code and verify it stays in sync:
+
+```sh
+go generate ./... && git diff --exit-code
+```
+
+Non-idempotent generators (timestamps, map iteration order) cause spurious
+failures — make generators deterministic or exclude their output from the diff.
+
+## Structured Logging with slog
+
+Use `log/slog` (stdlib, Go 1.21+) for all structured logging:
+
+```go
+slog.Info("request handled",
+    "method", r.Method,
+    "path", r.URL.Path,
+    "duration", time.Since(start),
+    "status", status,
+)
+```
+
+- Use `slog.With()` to add context that applies to a group of log calls.
+- Use `slog.NewJSONHandler(os.Stdout, nil)` for production (machine-readable).
+- Use `slog.NewTextHandler(os.Stderr, nil)` for local development.
+- Pass `*slog.Logger` via dependency injection or `context.Context`, not globals.
+
+## Common Agent Mistakes in Go
+
+These are patterns where AI-generated Go code consistently underperforms
+human-written code. Watch for them during review.
+
+### Resource lifecycle
+
+Agents forget to close resources — database rows, file handles, HTTP response
+bodies. Every `Open`, `Query`, or `Get` that returns a closeable value needs
+a corresponding `defer Close()` immediately after the error check.
+
+### Error handling quality
+
+AI code is almost twice as likely to have error handling issues. In Go, where
+every function returns an error, this compounds. Watch for: swallowed errors
+(`_ = doThing()`), errors logged and returned (pick one), and generic error
+wrapping that loses context.
+
+### Concurrency errors
+
+Agent-generated Go code has 2x the concurrency errors of human code. Goroutines
+are easy to write, hard to get right. Watch for: goroutines without clear
+shutdown paths, shared state without synchronization, and channel misuse
+(sending on closed channels, unbounded channel growth).
+
+### Over-abstraction
+
+Agents default to "enterprise" patterns — unnecessary interfaces, factory
+functions, and layers of indirection. In Go, write the concrete implementation
+first. Extract an interface only when you have a second consumer or need to
+mock at a boundary.
+
+### Speculating instead of reading
+
+Agents guess at APIs rather than checking godoc or source. This produces
+hallucinated function signatures, wrong parameter orders, and non-existent
+package names (~20% hallucination rate for package names).
+
+## Agent-Friendly Go Patterns
+
+Patterns that make agent-generated code more reliable:
+
+- **Plain SQL over ORMs**: `database/sql` + sqlc. Agents produce better SQL
+  than ORM code because SQL is well-represented in training data and has
+  deterministic behavior.
+- **Explicit security checks**: Don't rely on the agent to "know" about
+  security. Add explicit input validation, use `filepath.Clean`, prefer
+  `crypto/rand`, and check `exec.Command` args.
+- **Compiler as guardrail**: Go's type system catches errors instantly.
+  Use strong types (custom types over raw strings for IDs, enums via
+  `type Status int` with `iota`) to surface mistakes at compile time.
+- **Write the dumbest thing that works**: Three similar functions are better
+  than a premature generic abstraction. If you see three, consider a shared
+  helper — not before.
+- **Provide verification commands**: Include `go test -race ./...`,
+  `golangci-lint run`, and `go vet ./...` in task prompts so the agent
+  can self-verify after each change.
 
 ## Code Review Checklist
 
