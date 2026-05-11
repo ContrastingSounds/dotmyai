@@ -6,12 +6,18 @@
 - **Process**: Linear
 - **Source Control**: GitHub
 - **CI/CD**: GitHub
-- **Knowledge Management**: AIKG
+- **Knowledge Management**: Obsidian + AIKG
 - **Full cloud**: GCP
 - **Lightweight cloud**: Cloudflare
 
 ## Data
-- Supabase
-- GCP CloudSQL
-- GCS
-- DuckDB
+- Postgres
+    - Supabase
+    - GCP CloudSQL
+- Object Storage
+    - GCS
+    - GCS Fuse
+- Analytical Database
+    - DuckDB
+- Standalone Database
+    - SQLite
