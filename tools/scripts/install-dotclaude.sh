@@ -70,6 +70,15 @@ generate_docs() {
     done
 
     printf "###### skills\n\n" >> "$docs_file"
+    for file in "$DOTCLAUDE_DIR"/skills/*/SKILL.md; do
+        [ -e "$file" ] || continue
+        local name
+        name=$(basename "$(dirname "$file")")
+        local desc
+        desc=$(sed -n 's/^description: *//p' "$file" | head -1)
+        printf "**%s**\n%s\n\n" "$name" "$desc" >> "$docs_file"
+    done
+    # Also check for legacy flat skill files
     for file in "$DOTCLAUDE_DIR"/skills/*.md; do
         [ -e "$file" ] || continue
         local name

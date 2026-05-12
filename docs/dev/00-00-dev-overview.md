@@ -10,9 +10,11 @@ Every list item in the "Development Catalog" section represents a markdown docum
 
 Each document is relatively standalone, and they are not being written in any specific order. Instead, a document is being written every time I am starting a task in my development work where I have not yet formalised that task.
 
-Each document is to be concise, prescriptive, with actual commands, skills, tools to execute. Those might be standalone executions, or short workflows.
+Each document is to be concise, prescriptive, with actual commands, skills, tools to execute. Those might be standalone executions, or short workflows.  
 
-These are intended to be day-to-day tools and activities, where I as developer am responsible for all coordination, orchestration, judgement calls. As a solo developer, I need fast, simple techniques that are easy to maintain and adapt on the fly.
+These are intended to be day-to-day tools and activities, where I as developer am responsible for all coordination, orchestration, judgement calls. As a solo developer, I need fast, simple techniques that are easy to maintain and adapt on the fly. The focus MUST be on a small number of skills, commands or agents that I can use to effectively delegate work to coding agents.
+
+It is ok to propose the development of new skills and tools (scripts and binaries) in order to deliver and maintain a good document.
 
 ## Development Catalog
 

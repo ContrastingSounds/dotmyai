@@ -25,6 +25,9 @@ Merge main into the current worktree branch, resolve conflicts, and run tests to
 
 ###### skills
 
+**codebase-review**
+Review an entire codebase — detect ownership, pull Linear design docs, run automated health scan, and produce triaged findings. Use when taking stock after many PRs, reviving a neglected project, or getting familiar with a cloned repo.
+
 **format-tables**
 Format markdown tables to have equal column widths
 
