@@ -1,6 +1,6 @@
 ---
-description: Review an entire codebase — detect ownership, pull Linear design docs, run automated health scan, and produce triaged findings. Use when taking stock after many PRs, reviving a neglected project, or getting familiar with a cloned repo.
-argument-hint: Optional focus area (e.g. "pkg/fsm", "security only", "post-PR-spree")
+description: Review an entire codebase for quality, fitness for purpose, and health. Use when taking stock after many PRs, reviving a neglected project, or getting familiar with a cloned repo.
+argument-hint: Optional focus or maturity (e.g. "prototype", "pkg/fsm", "production-ready check")
 disable-model-invocation: true
 allowed-tools: Bash(git *) Bash(scc *) Bash(bash *)
 ---
@@ -13,124 +13,138 @@ bash ${CLAUDE_SKILL_DIR}/scripts/codebase-scan.sh
 
 ## Input
 
-Focus area or review context: $ARGUMENTS
+Focus area, maturity context, or review emphasis: $ARGUMENTS
 
-If arguments are provided, scope the review to the specified area or emphasis. Otherwise, review the full codebase.
+If arguments mention a maturity level (prototype, MVP, production), adapt review expectations accordingly. A prototype doesn't need hardened security, but does need clear purpose and readable code. A production system needs both.
 
-## Step 1: Determine Ownership and Context
+If no arguments are provided, infer maturity from the codebase signals (test coverage, CI config, deployment config, README maturity).
 
-### 1a: Check repo ownership
+## Step 1: Gather Context
 
-Parse the git remote from the scan data above. Check if the owner matches any of:
-- `ContrastingSounds`
-- `jonwalls-dev`
-- `TheRillJon`
+### 1a: Determine what this code is supposed to do
 
-If it matches, this is the user's own repo — proceed to 1b. Otherwise, skip to 1c.
+This is the most important step. Before judging quality, understand purpose.
 
-### 1b: Search Linear for project and design docs (own repos only)
-
-Search for a Linear project matching the repo name:
+1. Parse the git remote from the scan data. If the owner matches `ContrastingSounds`, `jonwalls-dev`, or `TheRillJon`, this is the user's own repo — search Linear for the project:
 
 ```
 mcp__linear__list_projects()
 ```
 
-Scan the results for a project name that matches or closely matches the repo name. If found:
+If a matching project is found, pull all attached documents (PRDs, design specs, architecture docs):
 
-1. Retrieve the project details:
-```
-mcp__linear__get_project(id: "<project_id>")
-```
-
-2. List all documents attached to the project:
 ```
 mcp__linear__list_documents(projectId: "<project_id>")
-```
-
-3. For each document that looks like a PRD, design spec, or architecture doc (based on title), retrieve its content:
-```
 mcp__linear__get_document(id: "<doc_id>")
 ```
 
-Store any PRD or design document content for use in Step 2. If no project or documents are found, note this and continue.
+2. Read the project's README, CLAUDE.md, and any docs/ directory.
 
-### 1c: Read local project docs
+3. From all sources, build a picture of:
+   - What the project is supposed to do (requirements, goals)
+   - What stage it's at (prototype, active development, maintenance)
+   - What constraints or conventions are stated
+   - What language guidelines apply (check `~/.myai/lang-guides/` for the detected languages)
 
-Read the project's CLAUDE.md, README, and any docs/ directory for architecture context. For third-party repos, this is the primary source of design intent.
+If no design docs exist and the README is minimal, note this as a finding — a codebase without a stated purpose is hard to evaluate and hard to maintain.
 
-## Step 2: Agent Review Passes
+## Step 2: Qualitative Review
 
-Using the scan data injected above and any design documents from Step 1, run the following review passes. Adapt based on the focus area from $ARGUMENTS if provided.
+This is the core of the review. Read the code and assess it against its stated purpose and language standards. Use scan data to prioritise where to focus (high-churn, high-complexity files first).
 
-### 2a: Architecture review
+### 2a: Fitness for purpose
 
-Analyze the codebase architecture with context from all prior steps:
+If a PRD or design spec was found:
+- Compare implementation against stated requirements
+- List requirements that are fully implemented, partially implemented, or missing
+- Flag code that doesn't map to any stated requirement (scope creep or undocumented features)
 
-- If a PRD or design spec was found: compare the implementation against the stated requirements. List requirements that are fully implemented, partially implemented, or missing. Flag code that doesn't map to any stated requirement.
-- Cross-reference high-churn files from the scan with their complexity scores — these are where risk concentrates.
-- Check dependency direction: do modules depend inward (good) or circularly (bad)?
-- Look for god files/packages, inconsistent patterns in error handling/logging/config, dead code, and overly broad API surfaces.
+If no design docs exist:
+- Infer purpose from the code, README, and package metadata
+- Assess whether the code does what it appears to intend
+- Note any half-finished features, dead ends, or abandoned directions
 
-### 2b: Security review
+### 2b: Code quality and language idioms
 
-If the scan found leaked secrets or high-severity vulnerabilities, call these out as P1 findings immediately.
+Read the language guidelines from `~/.myai/lang-guides/` for the detected languages. Assess:
 
-Then perform a broader security assessment:
-- Input validation at system boundaries
-- Auth boundaries and credential handling
-- Insecure data handling patterns
+- **Readability**: Is the code clear and well-structured? Could someone new understand it?
+- **Idiomatic style**: Does it follow the conventions for its language? (Go: effective Go patterns, error handling, package structure. Python: PEP 8, type hints, project layout. TypeScript: strict mode, proper typing, framework conventions.)
+- **Naming**: Are types, functions, variables, and packages named clearly and consistently?
+- **Abstractions**: Are they appropriate for the project's complexity? Over-abstraction in a small project is as much a problem as under-abstraction in a large one.
+- **Error handling**: Is it consistent and appropriate? Does it follow language idioms?
+- **Dead code**: Unused exports, unreachable branches, commented-out blocks.
 
-### 2c: Test assessment
+### 2c: Project documentation
 
-Cross-reference test coverage with churn hotspots from the scan:
-- Are the most-changed files also the best-tested?
-- Look for untested high-churn files, tests with no meaningful assertions, and stale test files.
-- If tests can be run quickly (small project), run them and report results. For larger projects, collect tests without running and report coverage structure.
+Assess the quality of project documentation:
 
-### 2d: Targeted specialist passes (if warranted)
+- **README**: Does it explain what the project does, how to run it, and how to develop on it? Is it up to date?
+- **CLAUDE.md**: Does it exist? Does it contain useful conventions, patterns, and project-specific guidance? Or is it boilerplate / outdated?
+- **Code comments**: Are they accurate and useful, or stale and misleading? Are there areas where comments would help but are missing?
 
-Based on findings so far, invoke specialist agents where they add value:
+### 2d: Architecture and design
 
-- If error handling concerns were found: use the `silent-failure-hunter` agent on affected directories.
-- If domain types look problematic: use the `type-design-analyzer` on core type files.
-- If stale comments were flagged: use the `comment-analyzer` on affected areas.
+- **Module structure**: Is the code organised in a way that makes sense for its size and purpose?
+- **Dependency direction**: Do modules depend inward (good) or circularly (bad)?
+- **God files/packages**: Are there files doing too much?
+- **API surface**: Are boundaries clean or is everything exported/public?
+- **Consistency**: Error handling, logging, config management — are patterns consistent across the codebase?
 
-Only run specialists that address specific concerns from earlier passes — do not run all of them by default.
+### 2e: Test quality
 
-## Step 3: Triage and Report
+- Do tests exist? Are they meaningful or boilerplate?
+- Do they test behaviour or implementation details?
+- Are high-churn files (from scan data) well-tested?
+- Is the test structure appropriate for the language (see language guidelines)?
 
-### 3a: Classify findings
+## Step 3: Automated Findings
 
-Classify every finding into one of three priorities:
+Review the scan data from the top of this skill for automated findings. These support the qualitative review — they don't replace it.
+
+- **Security**: If the scan found leaked secrets or high-severity vulnerabilities, call these out as P1 regardless of project maturity.
+- **Dependencies**: Flag outdated deps with known CVEs. For prototypes, outdated-but-not-vulnerable deps are low priority.
+- **Churn + complexity**: High-churn, high-complexity files that are also poorly tested are the highest-risk code.
+
+For prototypes and MVPs, don't flag security hardening gaps unless there's actual exposure (auth handling, user input, network services). For production code, apply full scrutiny.
+
+## Step 4: Triage and Report
+
+### 4a: Report structure
+
+Present the review in this order — quality first, automated findings second:
+
+1. **Purpose and context**: What this code is for, what stage it's at, what docs exist
+2. **Fitness for purpose**: Does it deliver on its requirements? What's missing?
+3. **Code quality highlights**: What's good, what needs work, language-specific observations
+4. **Documentation assessment**: README, CLAUDE.md, code comments
+5. **Architecture observations**: Structure, patterns, design issues
+6. **Automated findings**: Security, dependencies, churn hotspots (from scan data)
+
+### 4b: Classify findings
 
 | Priority | Criteria |
 |----------|----------|
-| **P1 — Fix now** | Security vulns, broken build/tests, data loss risks, leaked secrets |
-| **P2 — Fix soon** | High-churn + high-complexity hotspots, deps with known CVEs, missing critical tests |
-| **P3 — Capture** | Code smells, style drift, minor tech debt, missing docs |
+| **P1 — Fix now** | Broken build/tests, leaked secrets, data loss risks, code that contradicts stated requirements |
+| **P2 — Fix soon** | Poor readability in high-churn areas, missing tests for core logic, stale/misleading docs, deps with known CVEs |
+| **P3 — Capture** | Style drift, minor inconsistencies, missing convenience docs, non-idiomatic patterns in low-churn code |
 
-### 3b: Present the report
+### 4c: Offer next actions
 
-Present findings grouped by priority. For each finding include:
-- File path and line number where applicable
-- What the issue is
-- Why it matters (risk/impact)
-- Suggested fix direction
-
-### 3c: Offer next actions
-
-After presenting findings, offer these actions:
+After presenting findings, offer:
 - **Create Linear issues**: "Want me to create Linear issues for the P1 and P2 findings?"
-- **Update CLAUDE.md**: "Should I add any of these patterns as CLAUDE.md rules to prevent recurrence?"
+- **Update CLAUDE.md**: "Should I add any of these patterns as CLAUDE.md rules?"
 - **Fix P1s now**: "Want me to fix the P1 issues in a worktree?"
+- **Improve README**: "Want me to draft a better README based on what I've learned about this project?"
 
 Wait for the user to choose before taking action.
 
 ## Rules
 
-- **Read-only by default**: Do not modify any files during the review. Only modify if the user explicitly asks for fixes in Step 3c.
-- **Linear is optional**: If the repo is not owned by the user, or if no Linear project is found, skip the Linear steps and continue. The review works without design docs.
-- **Respect focus**: If $ARGUMENTS specifies a focus area, scope all analysis to that area. Don't run unrelated passes.
-- **Don't run all specialists**: Only invoke specialist agents (2d) when earlier passes surface specific concerns.
-- **Interpret, don't just list**: Every section should contain analysis, not just raw tool output. The value of this skill is the interpretation and prioritisation.
+- **Read-only by default**: Do not modify any files during the review. Only modify if the user explicitly asks in Step 4c.
+- **Quality over checklists**: The primary value is qualitative assessment of code quality, readability, and fitness for purpose. Automated scan data supports this but doesn't replace it.
+- **Adapt to maturity**: A prototype, MVP, and production codebase have different expectations. Don't apply production standards to a prototype, and don't let a prototype slide on readability.
+- **Read the language guidelines**: Always check `~/.myai/lang-guides/` for language-specific conventions before assessing code style.
+- **Linear is optional**: If not the user's repo or no Linear project found, skip and continue.
+- **Respect focus**: If $ARGUMENTS specifies a focus area, scope analysis to that area.
+- **Interpret, don't just list**: Every section should contain analysis. The value is interpretation and prioritisation, not raw output.

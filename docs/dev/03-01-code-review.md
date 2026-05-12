@@ -26,30 +26,41 @@ From the repo root, in a fresh Claude Code session:
 /codebase-review
 ```
 
-Or with a focus area:
+Or with maturity context or a focus area:
 
 ```
-/codebase-review security only
+/codebase-review prototype — focus on readability and fitness for purpose
+/codebase-review production-ready check
 /codebase-review pkg/fsm
-/codebase-review post-PR-spree — focus on consistency and regressions
 ```
 
 ## What the Skill Does
 
 The `/codebase-review` skill is defined at `dotclaude/skills/codebase-review/` and bundles a scan script at `scripts/codebase-scan.sh`.
 
+The review is structured quality-first, automated-findings-second:
+
 | Stage | What | How |
 |-------|------|-----|
-| **Scan** | Injects automated health data into context via `!` shell execution: LOC/complexity, git churn, dependency health, secrets, vulnerabilities. | Bundled `codebase-scan.sh` runs before Claude sees the skill content |
-| **Context** | Checks repo ownership against your GitHub accounts. For your repos, searches Linear for the project and pulls PRDs/design docs. | `git remote`, Linear MCP tools |
-| **Review** | Architecture review (informed by PRD if found), security review, test assessment, targeted specialist agents on flagged areas. | Claude Code agents |
-| **Triage** | Classifies findings as P1/P2/P3 and offers to create Linear issues, update CLAUDE.md, or fix P1s in a worktree. | Agent + your judgment |
+| **Scan** | Injects automated health data into context: LOC/complexity, git churn, dependency health, secrets, vulnerabilities. | Bundled `codebase-scan.sh` via `!` shell execution |
+| **Context** | Determines purpose — checks ownership, pulls Linear PRDs, reads README/CLAUDE.md, loads language guidelines. | `git remote`, Linear MCP tools, file reads |
+| **Quality review** | Assesses fitness for purpose, code quality, language idioms, documentation, architecture, test quality. | Code reading informed by scan data + design docs |
+| **Automated findings** | Security, dependency, and churn findings from scan data. Weighted by project maturity — prototype vs production. | Scan data triage |
+| **Triage** | Classifies findings as P1/P2/P3. Offers to create Linear issues, update CLAUDE.md, improve README, or fix P1s. | Agent + your judgment |
+
+### Maturity-aware review
+
+The skill adapts its expectations based on project maturity (stated in arguments or inferred from signals like CI config, test coverage, deployment setup):
+
+- **Prototype**: Readability and fitness for purpose are critical. Security hardening and dependency currency are low priority unless there's actual exposure.
+- **MVP / active development**: Code quality, test coverage for core logic, and clear documentation become important.
+- **Production**: Full scrutiny — security, dependency health, test coverage, consistent patterns, clean API surfaces.
 
 ## Complementary Tools
 
 ### Git archaeology
 
-Use `/git-xray` for deep commit history analysis (churn hotspots, bug clusters, contributor dynamics, risk map):
+Use `/git-xray` for deep commit history analysis:
 
 ```
 /git-xray
@@ -76,9 +87,9 @@ Use the comment-analyzer to check for stale comments in src/lib/
 
 | Priority | Criteria | Action |
 |----------|----------|--------|
-| **P1 — Fix now** | Security vulns, broken build/tests, data loss risks, leaked secrets | Block further work until resolved |
-| **P2 — Fix soon** | High-churn + high-complexity hotspots, deps with known CVEs, missing critical tests | Create Linear issues, schedule in next cycle |
-| **P3 — Capture** | Code smells, style drift, minor tech debt, missing docs | Log for opportunistic cleanup |
+| **P1 — Fix now** | Broken build/tests, leaked secrets, data loss risks, code contradicting stated requirements | Block further work until resolved |
+| **P2 — Fix soon** | Poor readability in high-churn areas, missing tests for core logic, stale/misleading docs, deps with known CVEs | Create Linear issues, schedule in next cycle |
+| **P3 — Capture** | Style drift, minor inconsistencies, non-idiomatic patterns in low-churn code | Log for opportunistic cleanup |
 
 ## Ownership Detection
 
@@ -87,6 +98,6 @@ The scan script checks the git remote against your GitHub accounts:
 - `jonwalls-dev` (org)
 - `TheRillJon`
 
-If matched, the skill searches Linear for a matching project and pulls any PRDs or design specs. These are used to validate code against intended purpose — the architecture review compares implementation to stated requirements and flags gaps or scope creep.
+If matched, the skill searches Linear for a matching project and pulls any PRDs or design specs. These are used to assess fitness for purpose — the review compares implementation against stated requirements and flags gaps, scope creep, or missing documentation.
 
 For third-party repos, context comes from README, docs/, and CLAUDE.md.
