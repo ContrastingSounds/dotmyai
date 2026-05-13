@@ -54,6 +54,24 @@ If both projects may be open in the same shell session, use distinct env var nam
 - Apps created after 2025-10-01 have refresh tokens enabled by default
 - Apps created before then must migrate by 2026-04-01
 
+## MCP Server Per-Project Enable/Disable
+
+Per-project MCP server state is stored in `~/.claude.json` under project-specific keys:
+
+    projects.<path>.enabledMcpjsonServers    — string[]
+    projects.<path>.disabledMcpjsonServers    — string[]
+    projects.<path>.mcpServers                — project-scoped server configs (object)
+
+A user-scoped MCP server (e.g., Linear added via `claude mcp add --scope user`) can be
+disabled for a specific project. The `/mcp` slash command toggles this state.
+
+**Troubleshooting:** If a globally configured MCP server's tools aren't available in a
+session, check `disabledMcpjsonServers` for the project path in `~/.claude.json`. Use
+`/mcp` in the session to re-enable it.
+
+**Note:** Linear tools are deferred — they must be loaded via
+`ToolSearch("select:mcp__linear__<tool_name>")` before they can be called.
+
 ## References
 
 - [Linear MCP Docs](https://linear.app/docs/mcp)
