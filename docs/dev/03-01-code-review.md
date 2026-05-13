@@ -46,6 +46,7 @@ The review is structured quality-first, automated-findings-second:
 | **Context** | Determines purpose — checks ownership, pulls Linear PRDs, reads README/CLAUDE.md, loads language guidelines. | `git remote`, Linear MCP tools, file reads |
 | **Quality review** | Assesses fitness for purpose, code quality, language idioms, documentation, architecture, test quality. | Code reading informed by scan data + design docs |
 | **Automated findings** | Security, dependency, and churn findings from scan data. Weighted by project maturity — prototype vs production. | Scan data triage |
+| **Linear writes** | For your repos with a Linear project/initiative: creates missing PRDs from templates, creates a review issue and document with full findings. Always runs. | Linear MCP tools |
 | **Triage** | Classifies findings as P1/P2/P3. Offers to create Linear issues, update CLAUDE.md, improve README, or fix P1s. | Agent + your judgment |
 
 ### Maturity-aware review
@@ -90,6 +91,17 @@ Use the comment-analyzer to check for stale comments in src/lib/
 | **P1 — Fix now** | Broken build/tests, leaked secrets, data loss risks, code contradicting stated requirements | Block further work until resolved |
 | **P2 — Fix soon** | Poor readability in high-churn areas, missing tests for core logic, stale/misleading docs, deps with known CVEs | Create Linear issues, schedule in next cycle |
 | **P3 — Capture** | Style drift, minor inconsistencies, non-idiomatic patterns in low-churn code | Log for opportunistic cleanup |
+
+## Linear Integration
+
+For your own repos with a Linear project or initiative, the skill always performs these writes after the review:
+
+- **Initiative PRD**: If no PRD document exists on the initiative, creates one from the "Initiative PRD Template" document template in Linear, filled in from the review findings.
+- **Project PRD**: If no PRD document exists on the project, creates one from the "Project PRD Template" document template in Linear, filled in from the review findings.
+- **Review issue**: Creates a Linear issue recording that `/codebase-review` was run, with scope summary and offered actions.
+- **Review document**: Attaches the full review report as a document on the review issue.
+
+These are not optional — they ensure every reviewed codebase has a PRD and a review trail in Linear. PRDs are only created if missing; existing PRDs are left as-is.
 
 ## Ownership Detection
 

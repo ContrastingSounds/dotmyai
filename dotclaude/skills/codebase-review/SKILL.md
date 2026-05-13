@@ -129,22 +129,116 @@ Present the review in this order — quality first, automated findings second:
 | **P2 — Fix soon** | Poor readability in high-churn areas, missing tests for core logic, stale/misleading docs, deps with known CVEs |
 | **P3 — Capture** | Style drift, minor inconsistencies, missing convenience docs, non-idiomatic patterns in low-churn code |
 
-### 4c: Offer next actions
+### 4c: Linear writes (always, if Linear context exists)
 
-After presenting findings, offer:
+If a Linear initiative and/or project was found in Step 1, perform all of the following. These are not optional — they run every time.
+
+#### Initiative PRD
+
+Check whether a PRD document already exists for the initiative:
+
+```
+mcp__linear__list_documents(initiativeId: "<initiative_id>")
+```
+
+Scan the results for a document with "PRD" in the title. If none exists:
+
+1. Find the "Initiative PRD Template" document template:
+```
+mcp__linear__list_documents(query: "Initiative PRD Template")
+```
+
+2. Read the template content:
+```
+mcp__linear__get_document(id: "<template_doc_id>")
+```
+
+3. Create a new PRD document attached to the initiative, using the template structure and filling it in with what was learned during the review:
+```
+mcp__linear__save_document(
+  title: "PRD: <initiative name>",
+  initiative: "<initiative_id>",
+  content: "<filled-in template>"
+)
+```
+
+#### Project PRD
+
+Check whether a PRD document already exists for the project:
+
+```
+mcp__linear__list_documents(projectId: "<project_id>")
+```
+
+Scan the results for a document with "PRD" in the title. If none exists:
+
+1. Find the "Project PRD Template" document template:
+```
+mcp__linear__list_documents(query: "Project PRD Template")
+```
+
+2. Read the template content:
+```
+mcp__linear__get_document(id: "<template_doc_id>")
+```
+
+3. Create a new PRD document attached to the project, using the template structure and filling it in with what was learned during the review:
+```
+mcp__linear__save_document(
+  title: "PRD: <project name>",
+  project: "<project_id>",
+  content: "<filled-in template>"
+)
+```
+
+#### Code review issue and document
+
+Create an issue to record that a codebase review was performed:
+
+```
+mcp__linear__save_issue(
+  title: "Codebase review: <repo name>",
+  team: "<team>",
+  project: "<project name>",
+  assignee: "me",
+  state: "Done",
+  description: "<see below>"
+)
+```
+
+The issue description should include:
+- That the `/codebase-review` skill was used
+- The date of the review
+- A summary of the review scope and maturity context
+- The list of actions offered to the user at the end of the review (from Step 4d below)
+
+Then create a document attached to the issue containing the full review report from Step 4a:
+
+```
+mcp__linear__save_document(
+  title: "Codebase Review: <repo name> — <date>",
+  issue: "<issue identifier>",
+  content: "<full review report from 4a>"
+)
+```
+
+### 4d: Offer next actions
+
+After the Linear writes, offer some recommended next steps to the user based on the findings. These are optional — the user can choose which, if any, to take action on. Examples:
 - **Create Linear issues**: "Want me to create Linear issues for the P1 and P2 findings?"
 - **Update CLAUDE.md**: "Should I add any of these patterns as CLAUDE.md rules?"
 - **Fix P1s now**: "Want me to fix the P1 issues in a worktree?"
 - **Improve README**: "Want me to draft a better README based on what I've learned about this project?"
 
-Wait for the user to choose before taking action.
+Wait for the user to choose before taking action. Include the list of offered actions in the review issue description (Step 4c).
 
 ## Rules
 
-- **Read-only by default**: Do not modify any files during the review. Only modify if the user explicitly asks in Step 4c.
+- **Read-only for local files**: Do not modify any local files during the review. Only modify if the user explicitly asks in Step 4d.
+- **Always write to Linear**: If a Linear initiative or project was found, Step 4c is mandatory — PRD creation and review issue/document are not optional.
 - **Quality over checklists**: The primary value is qualitative assessment of code quality, readability, and fitness for purpose. Automated scan data supports this but doesn't replace it.
 - **Adapt to maturity**: A prototype, MVP, and production codebase have different expectations. Don't apply production standards to a prototype, and don't let a prototype slide on readability.
 - **Read the language guidelines**: Always check `~/.myai/lang-guides/` for language-specific conventions before assessing code style.
-- **Linear is optional**: If not the user's repo or no Linear project found, skip and continue.
+- **Linear is optional for context**: If not the user's repo or no Linear project found, skip all Linear steps and continue. The review works without Linear.
 - **Respect focus**: If $ARGUMENTS specifies a focus area, scope analysis to that area.
 - **Interpret, don't just list**: Every section should contain analysis. The value is interpretation and prioritisation, not raw output.
