@@ -143,17 +143,12 @@ mcp__linear__list_documents(initiativeId: "<initiative_id>")
 
 Scan the results for a document with "PRD" in the title. If none exists:
 
-1. Find the "Initiative PRD Template" document template:
+1. Read the initiative PRD template:
 ```
-mcp__linear__list_documents(query: "Initiative PRD Template")
-```
-
-2. Read the template content:
-```
-mcp__linear__get_document(id: "<template_doc_id>")
+mcp__linear__get_document(id: "initiative-prd-template-94edabdf2316")
 ```
 
-3. Create a new PRD document attached to the initiative, using the template structure and filling it in with what was learned during the review:
+2. Create a new PRD document attached to the initiative, using the template structure and filling it in with what was learned during the review:
 ```
 mcp__linear__save_document(
   title: "PRD: <initiative name>",
@@ -172,17 +167,12 @@ mcp__linear__list_documents(projectId: "<project_id>")
 
 Scan the results for a document with "PRD" in the title. If none exists:
 
-1. Find the "Project PRD Template" document template:
+1. Read the project PRD template:
 ```
-mcp__linear__list_documents(query: "Project PRD Template")
-```
-
-2. Read the template content:
-```
-mcp__linear__get_document(id: "<template_doc_id>")
+mcp__linear__get_document(id: "project-prd-template-1e9add732136")
 ```
 
-3. Create a new PRD document attached to the project, using the template structure and filling it in with what was learned during the review:
+2. Create a new PRD document attached to the project, using the template structure and filling it in with what was learned during the review:
 ```
 mcp__linear__save_document(
   title: "PRD: <project name>",
