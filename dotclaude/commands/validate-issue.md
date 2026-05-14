@@ -17,12 +17,13 @@ Extract the issue identifier from the input. Accepted formats:
 
 If the input does not match either format, ask the user for a valid Linear issue URL or identifier.
 
-## Step 2: Fetch the Issue and Comments
+## Step 2: Fetch the Issue, Comments, and Sub-Issues
 
-1. Use `mcp__linear__get_issue` with `includeRelations: true` to retrieve the issue details, including description and relations (sub-issues, parent, blocking/blocked-by).
+1. Use `mcp__linear__get_issue` with `includeRelations: true` to retrieve the issue details, including description and relations (blocking/blocked-by).
 2. Use `mcp__linear__list_comments` to retrieve all comments on the issue.
+3. Use `mcp__linear__list_issues` with `parentId` set to the issue identifier to retrieve sub-issues (children). Linear's `includeRelations` only returns peer relations (blocking, related, duplicate) — parent-child relationships require a separate query.
 
-If the issue cannot be found, inform the user and stop.
+Run all three calls in parallel. If the issue cannot be found, inform the user and stop.
 
 ## Step 3: Check for Outstanding Questions
 
@@ -65,13 +66,13 @@ Use the Agent tool with `subagent_type: "Explore"` for broad codebase exploratio
 
 ## Step 5: Check for Sub-Issues
 
-Use the relations returned from Step 2 (`includeRelations: true`) to check whether the issue has sub-issues (children).
+Use the `list_issues` results from Step 2 to check whether the issue has sub-issues (children).
 
 ### If sub-issues exist
 
 Each sub-issue becomes a task in the checklist. For each sub-issue:
 
-1. Fetch its full details with `mcp__linear__get_issue` if the relation data doesn't include the description.
+1. The `list_issues` response includes titles and truncated descriptions. Fetch full details with `mcp__linear__get_issue` for any sub-issue whose description was truncated.
 2. Use the sub-issue's title as the task title, and its identifier as a reference (e.g., `**Task 1: Add field validation (CON-43)**`).
 3. Derive the *What* and *Validate* sections from the sub-issue's description and your codebase exploration. If the sub-issue description is too vague to produce a concrete validation step, flag it and ask the user.
 4. Preserve the sub-issue ordering implied by any blocking relations. If no blocking relations exist, order by sub-issue sort order or creation date.
