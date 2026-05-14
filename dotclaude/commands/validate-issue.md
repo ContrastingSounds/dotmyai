@@ -19,8 +19,8 @@ If the input does not match either format, ask the user for a valid Linear issue
 
 ## Step 2: Fetch the Issue and Comments
 
-1. Use `mcp__claude_ai_Linear__get_issue` with `includeRelations: true` to retrieve the issue details, including description and relations (sub-issues, parent, blocking/blocked-by).
-2. Use `mcp__claude_ai_Linear__list_comments` to retrieve all comments on the issue.
+1. Use `mcp__linear__get_issue` with `includeRelations: true` to retrieve the issue details, including description and relations (sub-issues, parent, blocking/blocked-by).
+2. Use `mcp__linear__list_comments` to retrieve all comments on the issue.
 
 If the issue cannot be found, inform the user and stop.
 
@@ -46,7 +46,7 @@ If outstanding questions exist:
 
 Proactively resolve any clarification question threads where the answer is clear and complete — do not wait for user confirmation:
 
-1. Post a threaded reply using `mcp__claude_ai_Linear__save_comment` with `parentId` set to the question comment's ID:
+1. Post a threaded reply using `mcp__linear__save_comment` with `parentId` set to the question comment's ID:
    ```
    ✅ **Resolved** — [1-2 sentence summary of the answer and any decisions made]
    ```
@@ -63,12 +63,31 @@ Based on the issue description and implementation plan, explore the relevant par
 
 Use the Agent tool with `subagent_type: "Explore"` for broad codebase exploration when needed. For targeted lookups, use Grep/Glob/Read directly.
 
-## Step 5: Build the Execution-Ready Checklist
+## Step 5: Check for Sub-Issues
+
+Use the relations returned from Step 2 (`includeRelations: true`) to check whether the issue has sub-issues (children).
+
+### If sub-issues exist
+
+Each sub-issue becomes a task in the checklist. For each sub-issue:
+
+1. Fetch its full details with `mcp__linear__get_issue` if the relation data doesn't include the description.
+2. Use the sub-issue's title as the task title, and its identifier as a reference (e.g., `**Task 1: Add field validation (CON-43)**`).
+3. Derive the *What* and *Validate* sections from the sub-issue's description and your codebase exploration. If the sub-issue description is too vague to produce a concrete validation step, flag it and ask the user.
+4. Preserve the sub-issue ordering implied by any blocking relations. If no blocking relations exist, order by sub-issue sort order or creation date.
+
+Each sub-issue should appear as a task in the checklist. Additional tasks that don't correspond to a sub-issue are fine — not every task needs its own sub-issue.
+
+### If no sub-issues exist
+
+Build the checklist from the issue description and codebase exploration as described below.
+
+## Step 6: Build the Execution-Ready Checklist
 
 Rewrite or refine the issue description so it contains a **task checklist** where every item follows this pattern:
 
 ```markdown
-- [ ] **Task N: [Short imperative title]**
+- [ ] **Task N: [Short imperative title]** *(SUB-ID if from a sub-issue)*
   *What*: [Specific description of the change — files to modify, logic to add/change]
   *Validate*: [How to verify this task is correct — specific test command, manual check, or expected output]
   *Then*: Run tests → commit → update Linear
@@ -82,10 +101,11 @@ Rewrite or refine the issue description so it contains a **task checklist** wher
 - Every task must have a concrete validation step — not just "check it works" but a specific command or assertion.
 - Group related changes into one task when they must be committed together (e.g., a struct change and all callers).
 - Keep tasks small enough that each commit is easy to review.
+- When tasks originate from sub-issues, include the sub-issue identifier so `/execute-issue` can map tasks back to sub-issues for status updates.
 
-## Step 6: Update the Issue Description
+## Step 7: Update the Issue Description
 
-Use `mcp__claude_ai_Linear__save_issue` to update the issue description with the validated, execution-ready content. Preserve the existing problem statement, context, and approach sections. Replace or add the implementation checklist.
+Use `mcp__linear__save_issue` to update the issue description with the validated, execution-ready content. Preserve the existing problem statement, context, and approach sections. Replace or add the implementation checklist.
 
 The final description structure should be:
 
@@ -101,12 +121,12 @@ The final description structure should be:
 
 ## Execution Checklist
 
-- [ ] **Task 1: ...**
+- [ ] **Task 1: [Title]** *(CON-43)*
   *What*: ...
   *Validate*: ...
   *Then*: Run tests → commit → update Linear
 
-- [ ] **Task 2: ...**
+- [ ] **Task 2: [Title]** *(CON-44)*
   *What*: ...
   *Validate*: ...
   *Then*: Run tests → commit → update Linear
@@ -117,11 +137,13 @@ The final description structure should be:
 [Preserved from existing description]
 ```
 
-## Step 7: Report to User
+When tasks come from sub-issues, include the sub-issue identifier in parentheses after the title. When tasks don't correspond to a sub-issue, omit the identifier.
+
+## Step 8: Report to User
 
 Summarize what was done:
 1. Whether any outstanding questions were found and how they were resolved.
-2. The number of tasks in the checklist.
+2. The number of tasks in the checklist, and how many originated from sub-issues.
 3. Any assumptions made or risks flagged.
 4. Suggest next step: "Run `/execute-issue {ID}` to begin execution, or review the updated description in Linear first."
 
