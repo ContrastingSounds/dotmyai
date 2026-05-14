@@ -21,15 +21,15 @@ It is ok to propose the development of new skills and tools (scripts and binarie
 ### 01 Prep (Configure, Plan)
 - brainstorm (local)
 - plan (Linear)
-- configuration (lang guides)
-- Work package (worktrees)
+- `01-03-configuration.md` — git branching strategy (staging + work branches)
+- `01-04-work-packages-and-trees.md` — bundling changes, worktree setup, dependency ordering
 - Project level MCP, plugins, skills
 
 ### 02 Build (Implementation)
-- Task management 
+- `02-01-task-management.md` — Linear issue fetching, status updates, comment conventions
 - Context management
-- Coding
-- Testing
+- `02-03-coding.md` — context loading, code changes, commit discipline
+- `02-04-testing.md` — test decisions, verification commands, agent anti-patterns
 
 ### 03 Review (Verify)
 - Code base review

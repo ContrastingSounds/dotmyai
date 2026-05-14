@@ -8,8 +8,8 @@ Merge a verified worktree branch into main, remove the worktree, delete the bran
 **create-plan-from-issue**
 Pull a Linear issue, review requirements, create a detailed implementation plan, and raise clarification questions as comments. Planning only — no execution.
 
-**execute-issue**
-Execute a Linear issue end-to-end — optionally split into sub-issues, create a worktree, and work through each task with tests, commits, and Linear updates.
+**execute-issue** *(deprecated — replaced by skill)*
+See `dotclaude/skills/execute-issue/SKILL.md`.
 
 **git-xray**
 Run five diagnostic git commands against a repo and produce an interpreted analysis of codebase health, risk areas, and team dynamics.
@@ -27,6 +27,9 @@ Merge main into the current worktree branch, resolve conflicts, and run tests to
 
 **codebase-review**
 Review an entire codebase — detect ownership, pull Linear design docs, run automated health scan, and produce triaged findings. Use when taking stock after many PRs, reviving a neglected project, or getting familiar with a cloned repo.
+
+**execute-issue**
+Execute a work package (parent issue with sub-issues) or a single issue. Creates a worktree from staging, works through tasks with tests, commits, and Linear updates, then raises a PR to staging.
 
 **format-tables**
 Format markdown tables to have equal column widths
