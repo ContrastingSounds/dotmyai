@@ -183,7 +183,15 @@ mcp__linear__save_document(
 
 #### Code review issue and document
 
-Create an issue to record that a codebase review was performed:
+Create an issue to capture the review findings. Read the template at `${CLAUDE_SKILL_DIR}/templates/coding-issue.md` and populate the human-written sections:
+
+- **What**: That `/codebase-review` was run, the date, the review scope and maturity context, and a summary of P1/P2 findings that need action.
+- **Constraints**: What the review found to be working well and should not be changed.
+- **Not Decided**: Open questions surfaced by the review. Remove this section if there are none.
+- **Acceptance Criteria**: One verifiable condition per P1/P2 finding (e.g. "no leaked secrets in config files", "core business logic has test coverage").
+- **Agent Instructions**: Link to the attached review document (created below), link to the project PRD if one exists, and the specific code paths relevant to findings.
+
+Leave the agent-written sections (Plan, Approach, Work Items, Done When) unchanged from the template.
 
 ```
 mcp__linear__save_issue(
@@ -191,16 +199,9 @@ mcp__linear__save_issue(
   team: "<team>",
   project: "<project name>",
   assignee: "me",
-  state: "Done",
-  description: "<see below>"
+  description: "<populated template>"
 )
 ```
-
-The issue description should include:
-- That the `/codebase-review` skill was used
-- The date of the review
-- A summary of the review scope and maturity context
-- The list of actions offered to the user at the end of the review (from Step 4d below)
 
 Then create a document attached to the issue containing the full review report from Step 4a:
 
