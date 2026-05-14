@@ -125,7 +125,13 @@ git branch staging main && git push -u origin staging
 
 If the worktree or branch already exists, ask the user whether to reuse it or create a fresh one.
 
-All subsequent work happens in the worktree directory.
+After creating (or reusing) the worktree, switch the session into it:
+
+```
+EnterWorktree(path: "../${REPO}-${ISSUE_ID}")
+```
+
+All subsequent commands now run from the worktree directory — no `pushd`/`popd` or `cd` needed.
 
 ## Step 5: Load Context
 
@@ -156,72 +162,67 @@ Read all files that will be modified across all tasks. Understand the current im
 
 ## Step 6: Execute Tasks
 
-Process tasks in dependency order (Work Package) or checklist order (Single Issue). For each task:
+Process tasks in dependency order (Work Package) or checklist order (Single Issue). Each task runs in a fresh subagent with its own context window. The parent session orchestrates: it briefs each agent, verifies the result, and updates Linear.
 
-### 6a: Read current state
+### 6a: Spawn subagent for the task
 
-Re-read any files that were modified by previous tasks on this branch. The code has changed since Step 5d.
+Build a prompt containing only task-specific context — the subagent picks up coding conventions, test commands, and architecture from the project's CLAUDE.md automatically.
 
-Read the task description (sub-issue description or checklist item) for:
-- **What**: The change to make
-- **Validate**: The verification command
-- **Files**: Which files to modify
+```
+Agent(
+  description: "<issue-id>: <short task title>",
+  prompt: "## Task
+<task description from sub-issue or checklist item>
 
-### 6b: Implement
+## Issue ID
+<sub-issue ID or parent ID>
 
-Make the changes described in the task. Follow the project's coding conventions from CLAUDE.md and language guidelines.
+## Files to modify
+<list of files from planning step>
 
-Use the Edit tool for modifications and Write for new files. Change only what the task requires — no scope creep.
+## Cross-task context
+<any relevant state from prior tasks, e.g. 'Task 2 added a RetryCount field to types.go that you need to reference'. Omit if this is the first task or there are no dependencies.>
 
-### 6c: Test
+## Instructions
+1. Read the files listed above. Read CLAUDE.md for project conventions.
+2. Implement the change described in the task. Change only what the task requires.
+3. Run validation. If no validation command is specified in the task, run targeted tests for the changed files.
+4. If validation fails, fix and retry. After 3 failed attempts, report the failure with details — do not skip the task.
+5. Run formatters and linters.
+6. Stage specific files and commit:
+   git add <specific files>
+   git commit -m '<issue-id>: <imperative description>
 
-Run the validation command from the task description. If no validation is specified, run targeted tests for the changed files:
-- Go: `go test ./<package>/ -v`
-- Python: `uv run pytest tests/<relevant> -v`
-- TypeScript: `npx vitest run <relevant>`
-
-If validation fails:
-1. Read the error output carefully.
-2. Fix the issue.
-3. Re-run validation.
-4. After 3 failed attempts: post a blocker comment on the issue, explain what was tried, and ask the user for guidance. Do not skip the task.
-
-### 6d: Commit
-
-Run formatters and linters before staging:
-- Go: `gofmt -w . && go vet ./...`
-- Python: `uv run ruff format . && uv run ruff check .`
-- TypeScript: `npx oxfmt . && npx oxlint .`
-
-Stage and commit:
-
-```bash
-git add <specific files>
-git commit -m "<issue-id>: <imperative description>
-
-Co-Authored-By: Claude <model> <noreply@anthropic.com>"
+   Co-Authored-By: Claude <model> <noreply@anthropic.com>'
+7. Report what you changed, which tests passed, and the commit hash."
+)
 ```
 
-Use specific file paths in `git add`. Verify with `git diff --staged` before committing.
+### 6b: Verify the result
 
-### 6e: Update Linear
+After the subagent returns:
+
+1. Check that a new commit exists: `git log -1 --oneline`
+2. If the subagent reported a failure, post a blocker comment on the issue and ask the user for guidance. Do not proceed to the next task.
+
+### 6c: Update Linear
 
 **Work Package**: Update the sub-issue:
 
 ```
-mcp__linear__save_comment(issueId: "<sub-issue ID>", body: "Completed: <summary>. Validation: <pass/fail>.")
+mcp__linear__save_comment(issueId: "<sub-issue ID>", body: "Completed: <summary from agent>. Validation: <pass/fail>.")
 mcp__linear__save_issue(id: "<sub-issue ID>", state: "Done")
 ```
 
 **Single Issue**: Post progress on the parent:
 
 ```
-mcp__linear__save_comment(issueId: "<issue ID>", body: "Completed task N: <summary>. Validation: <pass/fail>.")
+mcp__linear__save_comment(issueId: "<issue ID>", body: "Completed task N: <summary from agent>. Validation: <pass/fail>.")
 ```
 
-### 6f: Next task
+### 6d: Next task
 
-Repeat from 6a for the next task in order.
+Record any cross-task context from this task's result (new files created, fields added, interfaces changed) to include in the next agent's prompt. Repeat from 6a for the next task in order.
 
 ## Step 7: Final Validation
 
@@ -273,7 +274,17 @@ mcp__linear__save_comment(
 )
 ```
 
-## Step 9: Update Linear
+## Step 9: Exit Worktree
+
+Return the session to the original repository directory:
+
+```
+ExitWorktree(action: "keep")
+```
+
+The worktree and branch remain on disk for the developer to review. Cleanup happens after merge (see Step 11).
+
+## Step 10: Update Linear
 
 Move the parent issue to Needs Verification:
 
@@ -283,7 +294,7 @@ mcp__linear__save_issue(id: "<parent ID>", state: "Needs Verification")
 
 Do NOT move to Done — the developer reviews the PR and merges it. Done happens after merge.
 
-## Step 10: Report to User
+## Step 11: Report to User
 
 Summarize:
 1. Number of tasks completed (and sub-issues if applicable).
@@ -305,5 +316,6 @@ Summarize:
 - **One commit per task**: Each task gets its own commit. Do not batch.
 - **PR to staging**: Never target main. Never merge the PR — the developer does that.
 - **Standard git worktrees**: Do not use `claude --worktree` or `-w`. Use `git worktree add`.
+- **No pushd/popd or cd**: Use `EnterWorktree`/`ExitWorktree` to switch directories. Never use `pushd`, `popd`, or `cd` to run commands in the worktree.
 - **Ask on ambiguity**: If a task description is unclear or a validation step is missing, ask the user before guessing.
 - **Fail gracefully**: After 3 failed validation attempts, stop, post a blocker comment, and ask the user.
