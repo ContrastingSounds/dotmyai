@@ -62,7 +62,18 @@ Then continue as a Work Package.
 1. Tasks must exist — either sub-issues or checklist items in the description.
 2. No unresolved questions in description or unanswered question-comments.
 
-If not ready, tell the user and suggest `/validate-issue <ID>`. Stop here.
+If not ready, run `/validate-issue` in a subagent:
+
+```
+Agent(
+  description: "Validate issue <ID> for execution",
+  prompt: "Run /validate-issue <ID> — the issue needs an execution-ready checklist and any outstanding questions resolved before it can be executed. Use the Skill tool to invoke validate-issue.",
+)
+```
+
+When the subagent completes, re-fetch the issue from Linear to pick up the updated description, then continue from Step 2 (re-evaluate execution mode with the new content).
+
+If the subagent reports that it could not resolve outstanding questions (user input was needed and unavailable), stop and tell the user what's unresolved.
 
 ## Step 3: Plan Execution Order
 

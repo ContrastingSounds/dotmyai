@@ -88,8 +88,8 @@ Rewrite or refine the issue description so it contains a **task checklist** wher
 
 ```markdown
 - [ ] **Task N: [Short imperative title]** *(SUB-ID if from a sub-issue)*
-  *What*: [Specific description of the change — files to modify, logic to add/change]
-  *Validate*: [How to verify this task is correct — specific test command, manual check, or expected output]
+  *TODO*: [Specific description of the change — files to modify, logic to add/change]
+  *TEST*: [How to verify this task is correct — specific test command, manual check, or expected output]
   *Then*: Run tests → commit → update Linear
 ```
 
@@ -98,7 +98,6 @@ Rewrite or refine the issue description so it contains a **task checklist** wher
 - Each task must be a single, independently testable unit of work.
 - Tasks should be ordered so that earlier tasks don't depend on later ones.
 - If a task modifies test fixtures or adds new tests, call that out explicitly.
-- Every task must have a concrete validation step — not just "check it works" but a specific command or assertion.
 - Group related changes into one task when they must be committed together (e.g., a struct change and all callers).
 - Keep tasks small enough that each commit is easy to review.
 - When tasks originate from sub-issues, include the sub-issue identifier so `/execute-issue` can map tasks back to sub-issues for status updates.
@@ -107,7 +106,7 @@ Rewrite or refine the issue description so it contains a **task checklist** wher
 
 Use `mcp__linear__save_issue` to update the issue description with the validated, execution-ready content. Preserve the existing problem statement, context, and approach sections. Replace or add the implementation checklist.
 
-The final description structure should be:
+The final description structure should contain:
 
 ```markdown
 ## Problem Statement
@@ -119,21 +118,21 @@ The final description structure should be:
 ## Proposed Approach
 [Preserved from existing description]
 
-## Execution Checklist
+## Work Items
 
 - [ ] **Task 1: [Title]** *(CON-43)*
-  *What*: ...
-  *Validate*: ...
-  *Then*: Run tests → commit → update Linear
+  *TODO*: ...
+  *TEST*: ...
+  *Then*: Run test suite → commit → update Linear
 
 - [ ] **Task 2: [Title]** *(CON-44)*
-  *What*: ...
-  *Validate*: ...
-  *Then*: Run tests → commit → update Linear
+  *TODO*: ...
+  *TEST*: ...
+  *Then*: Run test suite → commit → update Linear
 
 [...]
 
-## Technical Considerations
+## Contraints
 [Preserved from existing description]
 ```
 
