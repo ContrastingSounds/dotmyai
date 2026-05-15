@@ -2,9 +2,6 @@
 
 ###### commands
 
-**checkout-work**
-Resolve a Linear Project, Linear Issue, GitHub PR, or git branch to the correct branch, create or reuse a worktree, and enter it.
-
 **cleanup-worktree**
 Merge a verified worktree branch into main, remove the worktree, delete the branch, and optionally update Linear.
 
@@ -27,6 +24,9 @@ Review a Linear issue and update its description so it is ready to execute — n
 Merge main into the current worktree branch, resolve conflicts, and run tests to verify the branch is ready to merge back.
 
 ###### skills
+
+**checkout-work**
+Resolve a Linear Project, Linear Issue, GitHub PR, or git branch to the correct branch, create or reuse a worktree, and enter it. Uses a colocated shell script for all git/gh operations to avoid permission prompts.
 
 **codebase-review**
 Review an entire codebase for quality, fitness for purpose, and health. Use when taking stock after many PRs, reviving a neglected project, or getting familiar with a cloned repo.
