@@ -26,7 +26,7 @@ Merge main into the current worktree branch, resolve conflicts, and run tests to
 ###### skills
 
 **checkout-work**
-Resolve a Linear Project, Linear Issue, GitHub PR, or git branch to the correct branch, create or reuse a worktree, and enter it. Uses a colocated shell script for all git/gh operations to avoid permission prompts.
+Resolve a Linear Project, Linear Issue, GitHub PR, or git branch to the correct branch, create or reuse a worktree, and enter it.
 
 **codebase-review**
 Review an entire codebase for quality, fitness for purpose, and health. Use when taking stock after many PRs, reviving a neglected project, or getting familiar with a cloned repo.

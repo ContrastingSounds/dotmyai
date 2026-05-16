@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Symlinks ~/.claude/{commands,skills,CLAUDE.md} to the git-tracked dotclaude/ dir.
+# Symlinks ~/.claude/{commands,skills,hooks,CLAUDE.md,settings.json,statusline-command.sh}
+# to the git-tracked dotclaude/ dir.
 # Safe to re-run: idempotent. Merges any files unique to ~/.claude into dotclaude/
 # first so nothing is lost (git tracks the merged result).
 set -euo pipefail
@@ -101,11 +102,20 @@ mkdir -p "$DOTCLAUDE_DIR"
 # so the result is the union of both. The repo tracks the merged state.
 merge_dir "$DOTCLAUDE_DIR/commands" "$CLAUDE_DIR/commands"
 merge_dir "$DOTCLAUDE_DIR/skills"   "$CLAUDE_DIR/skills"
+merge_dir "$DOTCLAUDE_DIR/hooks"    "$CLAUDE_DIR/hooks"
 
-# Replace with symlinks
+# Ensure hook scripts are executable
+chmod +x "$DOTCLAUDE_DIR"/hooks/*.sh 2>/dev/null || true
+
+# Replace directories with symlinks
 link "$DOTCLAUDE_DIR/commands"  "$CLAUDE_DIR/commands"
 link "$DOTCLAUDE_DIR/skills"    "$CLAUDE_DIR/skills"
-link "$DOTCLAUDE_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+link "$DOTCLAUDE_DIR/hooks"     "$CLAUDE_DIR/hooks"
+
+# Replace files with symlinks
+link "$DOTCLAUDE_DIR/CLAUDE.md"             "$CLAUDE_DIR/CLAUDE.md"
+link "$DOTCLAUDE_DIR/settings.json"         "$CLAUDE_DIR/settings.json"
+link "$DOTCLAUDE_DIR/statusline-command.sh" "$CLAUDE_DIR/statusline-command.sh"
 
 generate_docs
 
