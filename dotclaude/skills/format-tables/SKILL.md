@@ -11,7 +11,7 @@ Format all tables in a markdown file to have equal column widths for better read
 Run the formatter on the file: `$ARGUMENTS`
 
 ```bash
-python ai/tools/format_markdown_tables.py "$ARGUMENTS"
+python ~/.myai/dotclaude/skills/format-tables/scripts/format_markdown_tables.py "$ARGUMENTS"
 ```
 
 If no file is specified, ask the user which file to format.
@@ -23,6 +23,16 @@ If no file is specified, ask the user which file to format.
 - Pads all cells to equal width within their column
 - Preserves alignment indicators (`:---`, `:---:`, `---:`)
 - Rewrites the file in-place
+
+## Cleanup Leading Spaces
+
+If the formatted file has unwanted leading spaces (common after copy-paste from other sources), run:
+
+```bash
+python ~/.myai/dotclaude/skills/format-tables/scripts/cleanup_leading_spaces.py "$ARGUMENTS"
+```
+
+Modes: `--mode document` (default), `--mode block`, `--mode fixed --spaces N`
 
 ## After Formatting
 
