@@ -76,8 +76,17 @@ Match the input against project names (case-insensitive exact match first, then 
 
   - **One branch found** → go to Step 3 with that branch and `--track`.
   - **Multiple branches** → list the issues with their branches, ask user which to check out.
-  - **No branches, but active issues** → list the issues, ask which to start. Derive branch name from chosen issue and go to Step 3 with `--new`.
-  - **No active issues** → stop: "Project '<name>' has no in-progress or todo issues."
+  - **No issue-named branches found** → before offering to start new work, search for project-related branches that don't follow the issue-ID naming convention:
+    ```bash
+    $SCRIPT search-project "<project name>"
+    ```
+    This searches commit messages across all remote branches for the project name (case-insensitive, last 6 months), then traces matching commits back to their branches (excluding main/staging).
+    - If `STATUS=found` with `BRANCH` → present the branch to the user, explain it was found via commit history. If confirmed, go to Step 3 with `--track`.
+    - If `STATUS=found` with `MULTIPLE=true` → list the branches (pipe-delimited in `BRANCHES`), ask user which to check out.
+    - If `STATUS=no_matches` → fall through to the active-issues prompt below.
+
+    If still no branch: list the active issues, ask which to start. Derive branch name from chosen issue and go to Step 3 with `--new`.
+  - **No active issues** → still run `$SCRIPT search-project "<project name>"` as above — the project may have work on a branch even if all issues are in Backlog. If no branches found either, stop: "Project '<name>' has no in-progress or todo issues and no related branches."
 
 ## Step 3: Create or Reuse Worktree
 

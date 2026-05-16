@@ -133,12 +133,60 @@ cmd_create_worktree() {
     echo "STATUS=created"
 }
 
+cmd_search_project() {
+    local project_name="$1"
+
+    # Search commit messages across all remote branches for the project name
+    local commit_hashes
+    commit_hashes=$(git log --remotes --all --format='%H' --grep="$project_name" -i --since="6 months ago" | head -10)
+
+    if [ -z "$commit_hashes" ]; then
+        echo "STATUS=no_matches"
+        return 0
+    fi
+
+    # For each commit, find which remote branches contain it
+    local all_branches=""
+    for commit in $commit_hashes; do
+        local containing
+        containing=$(git branch -r --contains "$commit" 2>/dev/null \
+            | grep -v 'origin/main\|origin/staging\|origin/HEAD\|origin/master' \
+            | sed 's/^ *//' \
+            | sed 's|^origin/||' \
+            || true)
+        if [ -n "$containing" ]; then
+            all_branches="${all_branches}"$'\n'"${containing}"
+        fi
+    done
+
+    # Deduplicate
+    local unique_branches
+    unique_branches=$(echo "$all_branches" | sort -u | grep -v '^$' || true)
+
+    if [ -z "$unique_branches" ]; then
+        echo "STATUS=no_matches"
+        return 0
+    fi
+
+    local count
+    count=$(echo "$unique_branches" | wc -l | tr -d ' ')
+
+    echo "STATUS=found"
+    if [ "$count" -eq 1 ]; then
+        echo "BRANCH=$unique_branches"
+    else
+        echo "BRANCHES=$(echo "$unique_branches" | tr '\n' '|' | sed 's/|$//')"
+        echo "MULTIPLE=true"
+    fi
+}
+
 case "${1:-help}" in
     preflight)       cmd_preflight ;;
     resolve)         cmd_resolve "${2:?Usage: checkout-work.sh resolve <input>}" ;;
     create-worktree) cmd_create_worktree "${2:?branch}" "${3:?dir-suffix}" "${4:---new}" ;;
+    search-project)  cmd_search_project "${2:?Usage: checkout-work.sh search-project <project-name>}" ;;
     *)
-        echo "Usage: checkout-work.sh <preflight|resolve|create-worktree> [args]"
+        echo "Usage: checkout-work.sh <preflight|resolve|create-worktree|search-project> [args]"
         exit 1
         ;;
 esac
