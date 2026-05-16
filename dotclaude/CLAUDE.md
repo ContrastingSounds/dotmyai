@@ -130,6 +130,10 @@ Use worktrees as the default isolation for development work:
 - **`/validate-issue <issue>`** — Reviews a Linear issue description for execution readiness: resolves outstanding questions, builds a task checklist with validation steps, and adds test/commit/update instructions per task. Updates the issue description but makes no code changes.
 - **`/execute-issue <issue>`** — Executes a validated Linear issue end-to-end: splits into sub-issues with blocking dependencies if 4+ tasks, creates a worktree and branch, implements each task in dependency order with tests, commits, and Linear updates after each.
 
+## MCP Tools
+
+Linear MCP tools are always available — use them without asking permission. Load their schemas via ToolSearch and call them directly.
+
 ## General Preferences
 
 - DuckDB for ad hoc data exploration.
