@@ -4,6 +4,8 @@ Commands and skills used across the development workflow, grouped by stage from 
 
 Provenance: **(custom)** this repo · **(shell)** .zshrc · **(script)** ~/.myai/tools/ · **(claude)** built-in · **(plugin-supplier)** Claude Code plugin
 
+Supplier from `author.name` in `~/.claude/plugins/marketplaces/claude-plugins-official/.claude-plugin/marketplace.json`
+
 ## 01 Prep (Configure, Plan)
 
 Initialize a new CLAUDE.md with codebase documentation. **(claude)**
