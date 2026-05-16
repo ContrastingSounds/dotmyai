@@ -3,14 +3,11 @@
 Format markdown tables to have equal column widths.
 
 Usage:
-    python ai/tools/format_markdown_tables.py <file.md>
-    python ai/tools/format_markdown_tables.py --check <file.md>
+    python format_markdown_tables.py <file.md>
+    python format_markdown_tables.py --check <file.md>
 
 Options:
     --check     Check if tables need formatting (exit 1 if changes needed)
-
-Example:
-    python ai/tools/format_markdown_tables.py ai/instructions/understanding-rill-endpoints.md
 """
 
 import argparse
