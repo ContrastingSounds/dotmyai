@@ -128,7 +128,8 @@ Use worktrees as the default isolation for development work:
 - **`/create-plan-from-issue <issue>`** — Fetches a Linear issue, explores the codebase, drafts an implementation plan in the issue description, and posts clarification questions as comments. Planning only, no code changes.
 - **`/pull-issue-responses <issue>`** — Fetches comments from a Linear issue, pairs clarification questions with responses, and summarizes what's been answered, what's outstanding, and what needs follow-up. Read-only by default.
 - **`/validate-issue <issue>`** — Reviews a Linear issue description for execution readiness: resolves outstanding questions, builds a task checklist with validation steps, and adds test/commit/update instructions per task. Updates the issue description but makes no code changes.
-- **`/execute-issue <issue>`** — Executes a validated Linear issue end-to-end: splits into sub-issues with blocking dependencies if 4+ tasks, creates a worktree and branch, implements each task in dependency order with tests, commits, and Linear updates after each.
+- **`/execute-issue <issue>`** — Executes a validated Linear issue end-to-end: splits into sub-issues with blocking dependencies if 4+ tasks, creates a worktree and branch, implements each task with maximum parallelism (dependency-driven dispatch), tests, commits, and Linear updates after each.
+- **`/execute-plan <path>`** — Executes a local plan file end-to-end: parses work items, creates tasks with dependencies, creates a worktree, dispatches parallel agents per task, tests and commits each independently, then raises a PR to staging.
 
 ## MCP Tools
 

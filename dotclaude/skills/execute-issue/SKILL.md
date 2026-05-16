@@ -83,7 +83,7 @@ For each sub-issue, read its description to identify files that will be modified
 
 Determine execution order based on:
 1. **Existing blocking relations** in Linear (from `includeRelations`).
-2. **File overlap**: Tasks modifying the same file should run back-to-back.
+2. **File overlap**: Tasks modifying the same file must be chained (never run two agents on the same file).
 3. **Logical dependencies**: Types/interfaces before consumers. Infrastructure before features.
 
 Post the execution order on the parent issue:
@@ -104,6 +104,31 @@ mcp__linear__save_issue(id: "<parent ID>", state: "In Progress")
 ### Single Issue mode
 
 Extract tasks from the checklist. Execute in listed order. Move the issue to In Progress.
+
+## Step 3b: Create Local Tasks with Dependencies
+
+After determining execution order, create a local task for each work item:
+
+```
+For each sub-issue or checklist item:
+  TaskCreate(
+    subject: "<issue-id>: <short title>",
+    description: "<task description, files to modify, validation command>",
+    metadata: {linearIssueId: "<sub-issue ID>", files: ["path/to/file1.go", ...], validationCommand: "go test ./pkg/..."}
+  )
+```
+
+After all tasks are created, model dependencies:
+
+```
+For each dependency (file overlap, logical dep, Linear blocking relation):
+  TaskUpdate(taskId: "<id>", addBlockedBy: ["<dep-task-id>"])
+```
+
+**Dependency rules**:
+- Tasks sharing any file in their `files` list are chained sequentially via `addBlockedBy`.
+- Linear blocking relations (`blockedBy` from issue relations) map directly to task dependencies.
+- Logical ordering (types before consumers) adds `addBlockedBy` where no file overlap already chains them.
 
 ## Step 4: Create Worktree
 
@@ -160,13 +185,28 @@ mcp__linear__get_document(id: "<doc ID>")
 
 Read all files that will be modified across all tasks. Understand the current implementation before changing anything.
 
-## Step 6: Execute Tasks
+## Step 6: Execute Tasks (Parallel Dispatch Loop)
 
-Process tasks in dependency order (Work Package) or checklist order (Single Issue). Each task runs in a fresh subagent with its own context window. The parent session orchestrates: it briefs each agent, verifies the result, and updates Linear.
+Tasks execute via a parallel dispatch loop. Independent tasks (no shared files, no dependency) run simultaneously via multiple Agent() calls in a single message. The loop repeats until all tasks are completed.
 
-### 6a: Spawn subagent for the task
+### 6a: Find ready tasks
 
-Build a prompt containing only task-specific context — the subagent picks up coding conventions, test commands, and architecture from the project's CLAUDE.md automatically.
+```
+TaskList() → identify tasks with status=pending and no incomplete blockers
+```
+
+- If no tasks are ready AND no tasks are in_progress → all done, exit loop.
+- If no tasks are ready BUT some are in_progress → wait for agents to return.
+
+### 6b: Prepare and dispatch agents
+
+For each ready task:
+
+1. `TaskUpdate(taskId, status: in_progress)`
+2. `TaskGet` on each completed blocker → extract `metadata.summary` and `metadata.crossTaskNotes`
+3. Build the agent prompt with task description + cross-task context from blockers
+
+Spawn ALL ready agents in a single message (they run concurrently):
 
 ```
 Agent(
@@ -178,10 +218,10 @@ Agent(
 <sub-issue ID or parent ID>
 
 ## Files to modify
-<list of files from planning step>
+<list of files from task metadata>
 
 ## Cross-task context
-<any relevant state from prior tasks, e.g. 'Task 2 added a RetryCount field to types.go that you need to reference'. Omit if this is the first task or there are no dependencies.>
+<summary + crossTaskNotes from completed blockers, e.g. 'Task 2 added a RetryCount field to types.go that you need to reference'. Omit if no blockers.>
 
 ## Instructions
 1. Read the files listed above. Read CLAUDE.md for project conventions.
@@ -198,14 +238,20 @@ Agent(
 )
 ```
 
-### 6b: Verify the result
+### 6c: Process agent results
 
-After the subagent returns:
+When agents return, for each:
 
-1. Check that a new commit exists: `git log -1 --oneline`
-2. If the subagent reported a failure, post a blocker comment on the issue and ask the user for guidance. Do not proceed to the next task.
+1. **Verify commit**: `git log -1 --oneline` — confirm a new commit exists.
+2. **On success**:
+   - `TaskUpdate(taskId, status: completed, metadata: {commitHash: "...", summary: "...", crossTaskNotes: "...", filesChanged: [...]})`
+   - Update Linear (see 6d below).
+3. **On failure**:
+   - Post a blocker comment on the Linear issue.
+   - Ask the user for guidance.
+   - Do NOT block unrelated tasks — only tasks with a dependency on this one are affected.
 
-### 6c: Update Linear
+### 6d: Update Linear
 
 **Work Package**: Update the sub-issue:
 
@@ -220,9 +266,9 @@ mcp__linear__save_issue(id: "<sub-issue ID>", state: "Done")
 mcp__linear__save_comment(issueId: "<issue ID>", body: "Completed task N: <summary from agent>. Validation: <pass/fail>.")
 ```
 
-### 6d: Next task
+### 6e: Loop
 
-Record any cross-task context from this task's result (new files created, fields added, interfaces changed) to include in the next agent's prompt. Repeat from 6a for the next task in order.
+Return to 6a. Find newly unblocked tasks (their blockers are now completed) and dispatch them. Repeat until all tasks are completed or blocked on user input.
 
 ## Step 7: Final Validation
 
@@ -310,12 +356,14 @@ Summarize:
 ## Rules
 
 - **Single branch**: All tasks on one branch. No sub-branches per task.
-- **Dependency order**: Never start a task whose blockers are incomplete.
-- **Minimize file conflicts**: Consecutive tasks on the same file run back-to-back.
+- **Parallel execution**: Independent tasks (no shared files, no dependency) run simultaneously via multiple Agent() calls in one message.
+- **File conflict prevention**: Tasks modifying the same file are chained via `addBlockedBy`. Never run two agents on the same file.
+- **Task state is authoritative**: Use TaskCreate/TaskUpdate/TaskList for all tracking. Survives context compaction.
+- **Cross-task context via metadata**: When a task completes, store `summary` and `crossTaskNotes` in task metadata. Dependent tasks retrieve this via TaskGet on their blockers.
 - **Test before commit**: Never commit code that fails its validation step.
 - **One commit per task**: Each task gets its own commit. Do not batch.
 - **PR to staging**: Never target main. Never merge the PR — the developer does that.
 - **Standard git worktrees**: Do not use `claude --worktree` or `-w`. Use `git worktree add`.
 - **No pushd/popd or cd**: Use `EnterWorktree`/`ExitWorktree` to switch directories. Never use `pushd`, `popd`, or `cd` to run commands in the worktree.
 - **Ask on ambiguity**: If a task description is unclear or a validation step is missing, ask the user before guessing.
-- **Fail gracefully**: After 3 failed validation attempts, stop, post a blocker comment, and ask the user.
+- **Fail gracefully**: After 3 failed validation attempts, stop, post a blocker comment, and ask the user. Do not block unrelated tasks.

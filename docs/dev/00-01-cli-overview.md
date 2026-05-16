@@ -37,6 +37,9 @@ Create a worktree from main and print a Claude prompt to execute the plan. **(sh
 Execute a work package or single issue: worktree, tests, commits, Linear updates, PR. **(custom)**
 `/execute-issue <issue-id>`
 
+Execute a local plan file with task-based parallel orchestration. **(custom)**
+`/execute-plan <path-to-plan.md>`
+
 Guided feature development with codebase understanding and architecture focus. **(plugin-anthropic)**
 `/feature-dev`
 
