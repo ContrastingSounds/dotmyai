@@ -2,7 +2,7 @@
 
 Commands and skills used across the development workflow, grouped by stage from the Development Catalog.
 
-Provenance: **(custom)** this repo · **(shell)** .zshrc · **(script)** ~/.myai/tools/ · **(claude)** built-in Claude Code · **(plugin)** Claude Code plugin
+Provenance: **(custom)** this repo · **(shell)** .zshrc · **(script)** ~/.myai/tools/ · **(claude)** built-in · **(plugin-supplier)** Claude Code plugin
 
 ## 01 Prep (Configure, Plan)
 
@@ -35,10 +35,10 @@ Create a worktree from main and print a Claude prompt to execute the plan. **(sh
 Execute a work package or single issue: worktree, tests, commits, Linear updates, PR. **(custom)**
 `/execute-issue <issue-id>`
 
-Guided feature development with codebase understanding and architecture focus. **(plugin)**
+Guided feature development with codebase understanding and architecture focus. **(plugin-anthropic)**
 `/feature-dev`
 
-Create a git commit. **(plugin)**
+Create a git commit. **(plugin-anthropic)**
 `/commit`
 
 ## 03 Review (Verify)
@@ -52,13 +52,13 @@ Merge main into the worktree branch, resolve conflicts, and run tests. **(custom
 Review a pull request. **(claude)**
 `/review`
 
-Comprehensive multi-agent PR review. **(plugin)**
+Comprehensive multi-agent PR review. **(plugin-anthropic)**
 `/pr-review-toolkit:review-pr`
 
 Security review of pending changes on the current branch. **(claude)**
 `/security-review`
 
-Review changed code for reuse, quality, and efficiency, then fix issues found. **(plugin)**
+Review changed code for reuse, quality, and efficiency, then fix issues found. **(plugin-anthropic)**
 `/simplify`
 
 Scan a Claude Code session JSONL for env var values leaked from .zshenv. **(script)**
@@ -66,7 +66,7 @@ Scan a Claude Code session JSONL for env var values leaked from .zshenv. **(scri
 
 ## 04 Deploy (Ship)
 
-Commit, push, and open a PR. **(plugin)**
+Commit, push, and open a PR. **(plugin-anthropic)**
 `/commit-commands:commit-push-pr`
 
 Merge a verified worktree branch into main, remove the worktree and branch. **(custom)**
@@ -74,16 +74,16 @@ Merge a verified worktree branch into main, remove the worktree and branch. **(c
 
 ## 05 Refine (Automate)
 
-Update CLAUDE.md with learnings from the current session. **(plugin)**
+Update CLAUDE.md with learnings from the current session. **(plugin-anthropic)**
 `/claude-md-management:revise-claude-md`
 
-Audit and improve CLAUDE.md files across a repository. **(plugin)**
+Audit and improve CLAUDE.md files across a repository. **(plugin-anthropic)**
 `/claude-md-management:claude-md-improver`
 
-Analyze a codebase and recommend Claude Code automations. **(plugin)**
+Analyze a codebase and recommend Claude Code automations. **(plugin-anthropic)**
 `/claude-code-setup:claude-automation-recommender`
 
-Clean up local branches whose remote tracking branch has been deleted. **(plugin)**
+Clean up local branches whose remote tracking branch has been deleted. **(plugin-anthropic)**
 `/commit-commands:clean_gone`
 
 Run git diagnostics and produce an interpreted analysis of codebase health. **(custom)**
