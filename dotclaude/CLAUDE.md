@@ -135,6 +135,28 @@ Use worktrees as the default isolation for development work:
 
 Linear MCP tools are always available — use them without asking permission. Load their schemas via ToolSearch and call them directly.
 
+## Tool Selection
+
+Use dedicated tools instead of Bash equivalents. Bash is for shell-only operations (git, make, go, npm, compilers, test runners). Everything else has a purpose-built tool.
+
+| Task | Use | Not |
+|---|---|---|
+| Read a file | `Read` (with `offset`/`limit` for large files) | `cat`, `head`, `tail` |
+| Find files by path/pattern | `Glob` (e.g. `src/**/*.ts`) | `find`, `ls` |
+| Search file contents | `Grep` (e.g. `pattern` + `include` glob) | `grep`, `rg` |
+| Edit part of a file | `Edit` (`old_string` → `new_string`) | `sed`, `awk` |
+| Create or fully rewrite a file | `Write` | `echo >`, `cat <<EOF >` |
+| Load deferred MCP/tool schemas | `ToolSearch` (e.g. `select:TaskCreate,TaskUpdate`) | guessing parameters |
+| Explore codebase (broad) | `Agent` with `subagent_type: Explore` | sequential Grep/Glob loops |
+| Run tests, builds, git, CLI tools | `Bash` | — |
+
+**Rules of thumb:**
+- If you're reading, searching, or editing files — there's a dedicated tool. Use it.
+- Bash is for *executing programs*, not for file I/O.
+- Call independent tools in parallel (multiple tool calls in one response).
+- Read a file before editing it — Edit will fail if you haven't.
+- For large files, use `Read` with `offset` and `limit` rather than reading the whole thing.
+
 ## General Preferences
 
 - DuckDB for ad hoc data exploration.
