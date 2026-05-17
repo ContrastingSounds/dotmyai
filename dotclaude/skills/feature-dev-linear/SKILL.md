@@ -136,7 +136,33 @@ TaskCreate(subject: "Phase 7: Quality Review", description: "Design integration 
 
    Each row becomes a sub-issue. If reference issues from Phase 1 suggest a different structure, follow that proven pattern instead.
 
-4. Draft the **parent issue description**. This is the complete design document — someone reading only this issue understands the full scope:
+4. **Create the parent issue in Linear** (or update if input was an existing issue). The parent description IS the complete design document — someone reading only this issue understands the full scope.
+
+   ```
+   ToolSearch("select:mcp__linear__save_issue,mcp__linear__save_comment")
+   ```
+
+   If the input was a Linear issue ID, update the existing issue:
+   ```
+   mcp__linear__save_issue(id: "<existing ID>", description: "<parent description below>")
+   ```
+
+   If the input was plain text, create a new issue:
+   ```
+   mcp__linear__save_issue(
+     title: "<feature title>",
+     team: "<team>",
+     project: "<project if identified>",
+     assignee: "me",
+     state: "Todo",
+     priority: 2,
+     description: "<parent description below>"
+   )
+   ```
+
+   Note the returned issue ID — it will be used as `parentId` when creating sub-issues in Phase 6.
+
+   Parent description template:
 
 ```markdown
 ## Summary
@@ -201,34 +227,16 @@ Sub-issues are created and ready for `/execute-issue <ID>`.
 
 ## Phase 6: Linear Creation
 
-**Goal**: Create everything in Linear — parent issue, sub-issues with self-contained descriptions, blocking relations, and summary.
+**Goal**: Create sub-issues in Linear with full self-contained descriptions, set up blocking relations, and post a summary. The parent issue was already created in Phase 4.
 
 ### Actions
 
 1. Mark Phase 6 in_progress.
 
-2. **Create or update the parent issue.**
-
-   If the input was a Linear issue ID, update the existing issue:
+2. If the user requested changes in Phase 5, update the parent issue description in Linear first:
    ```
-   ToolSearch("select:mcp__linear__save_issue,mcp__linear__save_comment")
-   mcp__linear__save_issue(id: "<existing ID>", description: "<full parent description from Phase 4>")
+   mcp__linear__save_issue(id: "<parent ID>", description: "<revised parent description>")
    ```
-
-   If the input was plain text, create a new issue:
-   ```
-   mcp__linear__save_issue(
-     title: "<feature title>",
-     team: "<team>",
-     project: "<project if identified>",
-     assignee: "me",
-     state: "Todo",
-     priority: 2,
-     description: "<full parent description from Phase 4>"
-   )
-   ```
-
-   Note the returned issue ID for use as `parentId` in sub-issues.
 
 3. **Create each sub-issue** directly in Linear. Enrich each Phase 4 draft into a full, self-contained description. Every sub-issue must contain everything an executing agent needs — it must NOT reference the parent for context. Use the Phase 4 outline (title, summary, key files, dependencies) as the starting point, then expand it into this template:
 
@@ -321,16 +329,16 @@ then run `go test ./pkg/handlers/... -v` to verify."]
    - **Manual verification**: Steps the developer must perform themselves (e.g., "Open the app, navigate to X, verify Y appears correctly"). Include expected results.
    - **Scripts**: If a verification step is complex, write the script content directly in the plan so the developer can run it.
 
-4. **Update the parent issue** with the completed Integration Test Plan section:
+4. Determine the project's primary language and read the matching guide from `~/.myai/lang-guides/<language>/<language>-guidelines.md` to identify the standard test, build, lint, and vet commands for that language. Use these to populate the integration test plan.
+
+5. **Update the parent issue** with the completed Integration Test Plan section:
 
 ```markdown
 ## Integration Test Plan
 
 ### Automated Checks
-- `go test ./... -v` — full test suite passes
-- `go vet ./...` — no vet warnings
-- `go build ./...` — clean build
-[Add feature-specific test commands]
+[Language-appropriate test, build, lint, and vet commands from the language guidelines.
+Include feature-specific test commands derived from the sub-issue validation steps.]
 
 ### Manual Verification
 - [ ] [Step 1: specific thing to check and expected result]
@@ -344,14 +352,14 @@ then run `go test ./pkg/handlers/... -v` to verify."]
    mcp__linear__save_issue(id: "<parent ID>", description: "<updated description with integration test plan>")
    ```
 
-5. **Report to user**:
+6. **Report to user**:
    - Parent issue link
    - Number of sub-issues created
    - Dependency graph (text representation)
    - Integration test plan summary
    - Next step: `/execute-issue <parent ID>`
 
-6. Mark Phase 7 completed.
+7. Mark Phase 7 completed.
 
 ---
 
