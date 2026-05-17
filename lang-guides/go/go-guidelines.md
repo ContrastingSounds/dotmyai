@@ -114,7 +114,7 @@ func run() error {
 - Never launch a goroutine without a clear plan for how it stops.
 - Guard shared state with `sync.Mutex` or use channel-based designs. Prefer `sync.Mutex` for simple cases.
 
-## Testing
+## Testing Guidlines
 
 - Use stdlib `testing`. Table-driven tests are the default pattern:
   ```go
