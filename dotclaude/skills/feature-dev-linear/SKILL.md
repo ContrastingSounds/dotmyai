@@ -29,7 +29,7 @@ mcp__linear__get_issue(id: "<ID>", includeRelations: true)
 mcp__linear__list_comments(issueId: "<ID>")
 ```
 
-Use the issue description as the feature request. Note any existing context, constraints, or decisions from comments. Extract the team, project, and labels for use in Phase 5.
+Use the issue description as the feature request. Note any existing context, constraints, or decisions from comments. Extract the team, project, and labels for use in Phase 6.
 
 2. If the input is a plain text description, use it directly.
 
@@ -47,11 +47,12 @@ For any completed parent issue that has sub-issues, note its decomposition patte
 
 ```
 TaskCreate(subject: "Phase 1: Discovery", description: "Understand feature, gather context", activeForm: "Understanding feature")
-TaskCreate(subject: "Phase 2: Codebase Research", description: "Launch explorer and architect agents", activeForm: "Researching codebase")
-TaskCreate(subject: "Phase 3: Decomposition Design", description: "Design work breakdown, draft Linear content", activeForm: "Designing decomposition")
-TaskCreate(subject: "Phase 4: User Review", description: "Present plan, get approval or redirection", activeForm: "Awaiting review")
-TaskCreate(subject: "Phase 5: Linear Creation", description: "Create parent + sub-issues in Linear", activeForm: "Creating Linear issues")
-TaskCreate(subject: "Phase 6: Quality Review", description: "Design integration test plan", activeForm: "Planning integration tests")
+TaskCreate(subject: "Phase 2: Codebase Research", description: "Launch explorer agents, read key files", activeForm: "Researching codebase")
+TaskCreate(subject: "Phase 3: Architecture Options", description: "Present approaches and tradeoffs, get user direction", activeForm: "Presenting architecture options")
+TaskCreate(subject: "Phase 4: Decomposition Design", description: "Design work breakdown along chosen approach", activeForm: "Designing decomposition")
+TaskCreate(subject: "Phase 5: User Review", description: "Present detailed plan, get approval or redirection", activeForm: "Awaiting review")
+TaskCreate(subject: "Phase 6: Linear Creation", description: "Create parent + sub-issues in Linear", activeForm: "Creating Linear issues")
+TaskCreate(subject: "Phase 7: Quality Review", description: "Design integration test plan", activeForm: "Planning integration tests")
 ```
 
 5. Mark Phase 1 in_progress. Summarize your understanding of the feature in 2-3 sentences. Mark Phase 1 completed.
@@ -60,7 +61,7 @@ TaskCreate(subject: "Phase 6: Quality Review", description: "Design integration 
 
 ## Phase 2: Codebase Research
 
-**Goal**: Build deep, file-specific understanding of the domain — specific files, data structures, existing patterns, extension points, and conventions.
+**Goal**: Build deep, file-specific understanding of the domain — specific files, data structures, existing patterns, extension points, and conventions. This phase is exploration only; no design decisions are made yet.
 
 ### Actions
 
@@ -75,29 +76,53 @@ TaskCreate(subject: "Phase 6: Quality Review", description: "Design integration 
 
 3. After agents return, read all key files they identified to build deep understanding.
 
-4. Launch 1 `code-architect` agent with the combined findings, focused on **decomposition analysis**:
+4. Present a structured summary of findings: patterns discovered, conventions to follow, integration points, data structures, and constraints.
 
-   Prompt the architect with all explorer summaries and ask:
-   - What are the natural axes for breaking this work down? (e.g., by domain entity, by component type, by pipeline stage)
-   - Which files would change for each work unit?
-   - Which files overlap between units? (These determine dependency chains.)
-   - What is the recommended decomposition axis and why?
-
-5. Present a structured summary of findings: patterns discovered, conventions to follow, integration points, data structures, and the architect's decomposition recommendation.
-
-6. Mark Phase 2 completed.
+5. Mark Phase 2 completed.
 
 ---
 
-## Phase 3: Decomposition Design
+## Phase 3: Architecture Options
 
-**Goal**: Define the work breakdown and draft all Linear content. The parent issue description IS the design document.
+**Goal**: Present 2-3 genuinely distinct approaches with tradeoffs so the user can choose the direction before any detailed decomposition begins. This is the strategic decision gate.
 
 ### Actions
 
 1. Mark Phase 3 in_progress.
 
-2. Choose the decomposition axis based on the architect's recommendation from Phase 2. The axis determines what a "family" is and what a "variant" is:
+2. Launch 1-2 `code-architect` agents with the combined findings from Phase 2. The architect prompt must ask for **multiple distinct approaches**, not a single recommendation:
+
+   "Given these codebase exploration findings: [explorer summaries]. Identify 2-3 genuinely distinct approaches for implementing this feature. Each approach should represent a different philosophy, not just a naming variation. For each approach, describe:
+   - **Name and core idea**: One sentence capturing the philosophy
+   - **How it decomposes**: What the natural work units would be (high-level, not fully enumerated)
+   - **Key files affected**: Which areas of the codebase it touches
+   - **Tradeoffs**: What it optimizes for and what it sacrifices (complexity, performance, maintainability, scope, risk)
+   - **Estimated scope**: Rough number of sub-issues it would produce"
+
+3. Present the approaches to the user as a concise comparison:
+   - Brief summary of each approach (2-3 sentences each)
+   - Tradeoffs comparison (table format)
+   - Your recommendation with reasoning — but present all options, not just the recommended one
+
+4. **Wait for user to choose an approach.**
+
+   - User picks an approach → continue to Phase 4 with that approach
+   - User asks for a hybrid or modification → incorporate and confirm, then continue
+   - "Whatever you think is best" → continue with your recommendation
+
+5. Mark Phase 3 completed.
+
+---
+
+## Phase 4: Decomposition Design
+
+**Goal**: Break down the chosen approach into specific work units and draft all Linear content. The parent issue description IS the design document.
+
+### Actions
+
+1. Mark Phase 4 in_progress.
+
+2. Based on the approach chosen in Phase 3, determine the decomposition axis. The axis determines what a "family" is and what a "variant" is:
    - UI features: families = component types, variants = specific instances or states
    - Backend features: families = domain entities, variants = operations per entity
    - Data pipelines: families = pipeline stages, variants = data formats or sources
@@ -122,7 +147,8 @@ TaskCreate(subject: "Phase 6: Quality Review", description: "Design integration 
 [Table: families × variants with columns: #, Name, Key Trait, Key Files]
 
 ## Design Decisions
-[Key architectural decisions from codebase research, with reasoning]
+[Key architectural decisions from codebase research, with reasoning.
+Include which approach was chosen in Phase 3 and why.]
 
 ## Reference Patterns
 [Existing code patterns that sub-issues should follow, with specific file paths and function/type names]
@@ -134,57 +160,59 @@ TaskCreate(subject: "Phase 6: Quality Review", description: "Design integration 
 [Observable conditions for the overall feature being complete]
 
 ## Integration Test Plan
-[Placeholder — filled in Phase 6]
+[Placeholder — filled in Phase 7]
 
 ## Next Steps
 Sub-issues are created and ready for `/execute-issue <ID>`.
 ```
 
-5. Draft sub-issue outlines for each work unit: title, 3-4 sentence summary, key files, and dependencies. These outlines are presented to the user in Phase 4; full descriptions are written in Phase 5.
+5. Draft sub-issue outlines for each work unit. These are lightweight drafts for user review in Phase 5 — not full descriptions. For each work unit, capture:
+   - **Title** following convention: `[FAMILY] [VARIANT]: [Imperative description]`
+   - **Summary**: 3-4 sentences on what the sub-issue will accomplish
+   - **Key files**: Which files will be created or modified
+   - **Dependencies**: Which other sub-issues must complete first, and why
 
-   Title convention: `[FAMILY] [VARIANT]: [Imperative description]`
-
-6. Mark Phase 3 completed.
+6. Mark Phase 4 completed.
 
 ---
 
-## Phase 4: User Review
+## Phase 5: User Review
 
-**Goal**: Single approval gate. Present the complete plan and accept approval or redirection.
+**Goal**: Present the detailed breakdown for approval or redirection. The strategic direction was already chosen in Phase 3; this review covers the specifics of the decomposition.
 
 ### Actions
 
-1. Mark Phase 4 in_progress.
+1. Mark Phase 5 in_progress.
 
 2. Present the full plan:
-   - Parent issue title and full description (from Phase 3)
+   - Parent issue title and full description (from Phase 4)
    - Sub-issue list as a numbered table with columns: title, summary, key files, dependencies, estimated complexity (S/M/L)
    - One focused question if genuine ambiguity exists (maximum one question, and only if truly needed)
 
 3. **Wait for user response before proceeding.**
 
-   - Approval ("looks good", "proceed", etc.) → continue to Phase 5 as-is
-   - Specific redirections ("drop variant X", "add Y", "change the axis to Z") → incorporate feedback, briefly re-present the changed portions, then continue
-   - "Whatever you think is best" → continue to Phase 5 with your recommendation
+   - Approval ("looks good", "proceed", etc.) → continue to Phase 6 as-is
+   - Specific redirections ("drop variant X", "add Y", "reorder these") → incorporate feedback, briefly re-present the changed portions, then continue
+   - "Whatever you think is best" → continue to Phase 6 with your recommendation
 
-4. Mark Phase 4 completed.
+4. Mark Phase 5 completed.
 
 ---
 
-## Phase 5: Linear Creation
+## Phase 6: Linear Creation
 
 **Goal**: Create everything in Linear — parent issue, sub-issues with self-contained descriptions, blocking relations, and summary.
 
 ### Actions
 
-1. Mark Phase 5 in_progress.
+1. Mark Phase 6 in_progress.
 
 2. **Create or update the parent issue.**
 
    If the input was a Linear issue ID, update the existing issue:
    ```
    ToolSearch("select:mcp__linear__save_issue,mcp__linear__save_comment")
-   mcp__linear__save_issue(id: "<existing ID>", description: "<full parent description from Phase 3>")
+   mcp__linear__save_issue(id: "<existing ID>", description: "<full parent description from Phase 4>")
    ```
 
    If the input was plain text, create a new issue:
@@ -196,13 +224,13 @@ Sub-issues are created and ready for `/execute-issue <ID>`.
      assignee: "me",
      state: "Todo",
      priority: 2,
-     description: "<full parent description from Phase 3>"
+     description: "<full parent description from Phase 4>"
    )
    ```
 
    Note the returned issue ID for use as `parentId` in sub-issues.
 
-3. **Create each sub-issue** with a full, self-contained description. Every sub-issue must contain everything an executing agent needs — it must NOT reference the parent for context. Use this template:
+3. **Create each sub-issue** directly in Linear. Enrich each Phase 4 draft into a full, self-contained description. Every sub-issue must contain everything an executing agent needs — it must NOT reference the parent for context. Use the Phase 4 outline (title, summary, key files, dependencies) as the starting point, then expand it into this template:
 
 ```markdown
 ## Context
@@ -252,7 +280,7 @@ then run `go test ./pkg/handlers/... -v` to verify."]
    )
    ```
 
-4. **Set blocking relations.** After all sub-issues are created, add dependency relations based on file overlap and logical dependencies identified in Phase 3:
+4. **Set blocking relations.** After all sub-issues are created, add dependency relations based on file overlap and logical dependencies identified in Phase 4:
 
    ```
    mcp__linear__save_issue(
@@ -270,17 +298,17 @@ then run `go test ./pkg/handlers/... -v` to verify."]
    )
    ```
 
-6. Mark Phase 5 completed.
+6. Mark Phase 6 completed.
 
 ---
 
-## Phase 6: Quality Review
+## Phase 7: Quality Review
 
 **Goal**: Design the integration test plan — the cross-cutting verification that happens *after* all sub-issues are executed. Each sub-issue has its own Validation section for unit-level checks; this phase plans the verification that the whole feature works together.
 
 ### Actions
 
-1. Mark Phase 6 in_progress.
+1. Mark Phase 7 in_progress.
 
 2. Based on the decomposition and codebase research from Phase 2, identify **integration concerns** — things that can only be verified after multiple sub-issues are complete:
    - **Cross-component interactions**: Do the pieces compose correctly?
@@ -323,7 +351,7 @@ then run `go test ./pkg/handlers/... -v` to verify."]
    - Integration test plan summary
    - Next step: `/execute-issue <parent ID>`
 
-6. Mark Phase 6 completed.
+6. Mark Phase 7 completed.
 
 ---
 
@@ -332,7 +360,7 @@ then run `go test ./pkg/handlers/... -v` to verify."]
 - **Planning only**: Do not create worktrees, write code, make commits, or create PRs. The output of this skill is Linear issues, not code.
 - **Parent description IS the design document**: Do not create separate design documents, markdown files, or planning artifacts. Everything goes in the parent issue description.
 - **Sub-issues are self-contained**: Every sub-issue must include Context, Task, Files, Reference Code, Validation, and Acceptance Criteria sections. Never say "see parent" or "as described in the parent issue." Repeat context rather than reference it.
-- **One user gate**: Present the complete plan once in Phase 4. Do not ask multiple rounds of questions. One focused question maximum, and only if genuinely needed.
+- **Two user gates, two purposes**: Phase 3 is the strategic decision (which approach?). Phase 5 is the detail review (is the breakdown right?). Do not conflate these — the user must choose direction before decomposition begins.
 - **Clone before inventing**: Search for completed work packages in the same project and use their decomposition pattern as a starting point. Do not invent structure from scratch when proven structure exists.
 - **Specific file paths**: Every sub-issue must reference specific files to create/modify and specific files to use as patterns. "Follow existing conventions" is not specific enough — name the file, the function, the type.
 - **Exact validation commands**: Every sub-issue must include the exact test/build command to run. "Run tests" is not specific enough — include the actual command with flags and paths.
