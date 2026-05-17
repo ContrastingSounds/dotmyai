@@ -133,3 +133,9 @@ newb feat-my-feature
 Bare repo storing essential configuration files
 
 - github.com/TheRillJon/dotfiles
+
+## Change Log
+
+### 2026-05-17 — Added `User git` to all GitHub SSH host blocks
+
+Git pushes to `github.com-personal` started failing with `jon@github.com: Permission denied (publickey)`. The SSH key was valid and registered on GitHub, but git's SCP-style remote URLs (e.g. `github.com-personal:user/repo.git`) don't include a username, so SSH defaulted to the local system username `jon` instead of `git`. GitHub only accepts SSH connections as user `git`, so the key was offered but rejected. Added `User git` to all three GitHub host blocks (`github.com`, `github.com-rilldata`, `github.com-personal`) in `~/.ssh/config`.
