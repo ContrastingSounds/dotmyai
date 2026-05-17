@@ -12,7 +12,7 @@ It roughly follows a classic enterprise architecture link of thinking, with the 
 
 **Content**: What _specific_ data needs to be managed (e.g. guidelines per programming language)
 
-## Detailed Folder Structure
+## Folder Structure
 
 ```
 .myai/
