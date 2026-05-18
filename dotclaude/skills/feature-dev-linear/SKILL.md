@@ -160,7 +160,46 @@ TaskCreate(subject: "Phase 7: Quality Review", description: "Design integration 
    )
    ```
 
-   Note the returned issue ID — it will be used as `parentId` when creating sub-issues in Phase 6.
+   Note the returned issue ID — it will be used as `parentId` for the Build and Test sub-issues.
+
+5. **Create the Build and Test sub-issues** under the parent. These are the two top-level work streams:
+
+   ```
+   mcp__linear__save_issue(
+     title: "Build: <feature title>",
+     team: "<team from parent>",
+     project: "<project from parent>",
+     assignee: "me",
+     state: "Todo",
+     priority: 2,
+     parentId: "<parent issue ID>",
+     description: "Implementation work stream. Decomposition sub-issues are children of this issue."
+   )
+   ```
+
+   Note the returned Build issue ID — decomposition sub-issues in Phase 6 use this as their `parentId`.
+
+   ```
+   mcp__linear__save_issue(
+     title: "Test: <feature title>",
+     team: "<team from parent>",
+     project: "<project from parent>",
+     assignee: "me",
+     state: "Todo",
+     priority: 2,
+     parentId: "<parent issue ID>",
+     description: "Integration testing work stream. Placeholder — populated in Phase 7."
+   )
+   ```
+
+   Note the returned Test issue ID — it will be used in Phase 7. Set the Test issue as blocked by the Build issue:
+
+   ```
+   mcp__linear__save_issue(
+     id: "<Test issue ID>",
+     blockedBy: ["<Build issue ID>"]
+   )
+   ```
 
    Parent description template:
 
@@ -168,8 +207,12 @@ TaskCreate(subject: "Phase 7: Quality Review", description: "Design integration 
 ## Summary
 [2-3 sentence overview — what and why]
 
+## Work Streams
+- **Build** (<Build issue ID>): Implementation decomposed into N sub-issues
+- **Test** (<Test issue ID>): Integration testing — blocked by Build
+
 ## Scope
-[Count of sub-issues, decomposition axis explained]
+[Count of decomposition sub-issues under Build, decomposition axis explained]
 [Table: families × variants with columns: #, Name, Key Trait, Key Files]
 
 ## Design Decisions
@@ -192,13 +235,13 @@ Include which approach was chosen in Phase 3 and why.]
 Sub-issues are created and ready for `/execute-issue <ID>`.
 ```
 
-5. Draft sub-issue outlines for each work unit. These are lightweight drafts for user review in Phase 5 — not full descriptions. For each work unit, capture:
+6. Draft sub-issue outlines for each work unit. These are lightweight drafts for user review in Phase 5 — not full descriptions. For each work unit, capture:
    - **Title** following convention: `[FAMILY] [VARIANT]: [Imperative description]`
    - **Summary**: 3-4 sentences on what the sub-issue will accomplish
    - **Key files**: Which files will be created or modified
    - **Dependencies**: Which other sub-issues must complete first, and why
 
-6. Mark Phase 4 completed.
+7. Mark Phase 4 completed.
 
 ---
 
@@ -212,6 +255,7 @@ Sub-issues are created and ready for `/execute-issue <ID>`.
 
 2. Present the full plan:
    - Parent issue title and full description (from Phase 4)
+   - Work stream structure: Build (with decomposition sub-issues) and Test (integration testing, blocked by Build)
    - Sub-issue list as a numbered table with columns: title, summary, key files, dependencies, estimated complexity (S/M/L)
    - One focused question if genuine ambiguity exists (maximum one question, and only if truly needed)
 
@@ -238,7 +282,7 @@ Sub-issues are created and ready for `/execute-issue <ID>`.
    mcp__linear__save_issue(id: "<parent ID>", description: "<revised parent description>")
    ```
 
-3. **Create each sub-issue** directly in Linear. Enrich each Phase 4 draft into a full, self-contained description. Every sub-issue must contain everything an executing agent needs — it must NOT reference the parent for context. Use the Phase 4 outline (title, summary, key files, dependencies) as the starting point, then expand it into this template:
+3. **Create each decomposition sub-issue** as a child of the **Build** issue (not the parent). Enrich each Phase 4 draft into a full, self-contained description. Every sub-issue must contain everything an executing agent needs — it must NOT reference the parent for context. Use the Phase 4 outline (title, summary, key files, dependencies) as the starting point, then expand it into this template:
 
 ```markdown
 ## Context
@@ -283,7 +327,7 @@ then run `go test ./pkg/handlers/... -v` to verify."]
      assignee: "me",
      state: "Todo",
      priority: 3,
-     parentId: "<parent issue ID>",
+     parentId: "<Build issue ID>",
      description: "<full self-contained description>"
    )
    ```
@@ -302,7 +346,7 @@ then run `go test ./pkg/handlers/... -v` to verify."]
    ```
    mcp__linear__save_comment(
      issueId: "<parent ID>",
-     body: "Planning complete. Created N sub-issues:\n\n1. <ID>: <title>\n2. <ID>: <title>\n...\n\nExecution order: [describe dependency chain or 'all independent']\n\nReady for `/execute-issue <parent ID>`."
+     body: "Planning complete.\n\n**Build** (<Build ID>): N sub-issues\n1. <ID>: <title>\n2. <ID>: <title>\n...\n\n**Test** (<Test ID>): Integration testing (blocked by Build)\n\nExecution order: [describe dependency chain or 'all independent']\n\nReady for `/execute-issue <Build ID>`."
    )
    ```
 
@@ -312,7 +356,7 @@ then run `go test ./pkg/handlers/... -v` to verify."]
 
 ## Phase 7: Quality Review
 
-**Goal**: Design the integration test plan — the cross-cutting verification that happens *after* all sub-issues are executed. Each sub-issue has its own Validation section for unit-level checks; this phase plans the verification that the whole feature works together.
+**Goal**: Design the integration test plan and populate the Test issue. The Test issue is the cross-cutting verification that happens *after* all Build sub-issues are executed. Each Build sub-issue has its own Validation section for unit-level checks; this phase plans the verification that the whole feature works together.
 
 ### Actions
 
@@ -331,7 +375,74 @@ then run `go test ./pkg/handlers/... -v` to verify."]
 
 4. Determine the project's primary language and read the matching guide from `~/.myai/lang-guides/<language>/<language>-guidelines.md` to identify the standard test, build, lint, and vet commands for that language. Use these to populate the integration test plan.
 
-5. **Update the parent issue** with the completed Integration Test Plan section:
+5. **Assess complexity** of the integration test plan. The plan is **complex** if it has 3+ distinct verification areas (e.g., API integration tests, UI end-to-end tests, performance benchmarks, data migration validation). Otherwise it is **simple**.
+
+6. **Populate the Test issue.**
+
+   **If simple** (1-2 verification areas): Update the Test issue description directly with the full integration test plan. The Test issue is self-contained and executable as a single unit:
+
+   ```
+   mcp__linear__save_issue(
+     id: "<Test issue ID>",
+     description: "<test issue description using template below>"
+   )
+   ```
+
+   Test issue description template (simple):
+
+   ```markdown
+   ## Context
+   [Repeat relevant feature context. This issue verifies the complete feature after all
+   Build sub-issues are done. An agent executing this issue reads ONLY this description.]
+
+   ## Integration Test Plan
+
+   ### Automated Checks
+   [Language-appropriate test, build, lint, and vet commands from the language guidelines.
+   Include feature-specific test commands derived from the Build sub-issue validation steps.]
+
+   ### Manual Verification
+   - [ ] [Step 1: specific thing to check and expected result]
+   - [ ] [Step 2: ...]
+
+   ### Scripts
+   [Include any custom verification scripts as code blocks]
+
+   ## Validation
+   [Exact commands to run all integration checks]
+
+   ## Acceptance Criteria
+   - [ ] All automated checks pass
+   - [ ] All manual verification steps confirmed
+   - [ ] No regressions in existing functionality
+   ```
+
+   **If complex** (3+ verification areas): Update the Test issue description with an overview, then create sub-issues under it — one per verification area. Each test sub-issue follows the same self-contained template as Build sub-issues (Context, Task, Files, Reference Code, Validation, Acceptance Criteria):
+
+   ```
+   mcp__linear__save_issue(
+     id: "<Test issue ID>",
+     description: "Integration testing for <feature>. Decomposed into N verification areas."
+   )
+   ```
+
+   For each test sub-issue:
+   ```
+   mcp__linear__save_issue(
+     title: "Test: [Verification area]: [Imperative description]",
+     team: "<team from parent>",
+     project: "<project from parent>",
+     assignee: "me",
+     state: "Todo",
+     priority: 3,
+     parentId: "<Test issue ID>",
+     description: "<full self-contained description>"
+   )
+   ```
+
+   Set blocking relations between test sub-issues if they have dependencies.
+
+7. **Update the parent issue** with the completed Integration Test Plan section:
 
 ```markdown
 ## Integration Test Plan
@@ -352,14 +463,15 @@ Include feature-specific test commands derived from the sub-issue validation ste
    mcp__linear__save_issue(id: "<parent ID>", description: "<updated description with integration test plan>")
    ```
 
-6. **Report to user**:
+8. **Report to user**:
    - Parent issue link
-   - Number of sub-issues created
+   - Build issue link and number of decomposition sub-issues
+   - Test issue link (and number of test sub-issues if complex)
    - Dependency graph (text representation)
    - Integration test plan summary
-   - Next step: `/execute-issue <parent ID>`
+   - Next step: `/execute-issue <Build ID>`, then `/execute-issue <Test ID>`
 
-7. Mark Phase 7 completed.
+9. Mark Phase 7 completed.
 
 ---
 
