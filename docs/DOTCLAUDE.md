@@ -3,7 +3,7 @@
 ###### commands
 
 **cleanup-worktree**
-Merge a verified worktree branch into main, remove the worktree, delete the branch, and optionally update Linear.
+Merge a verified worktree branch into staging, remove the worktree, delete the branch, and optionally update Linear.
 
 **create-plan-from-issue**
 Pull a Linear issue, review requirements, create a detailed implementation plan, and raise clarification questions as comments. Planning only — no execution.
@@ -21,7 +21,7 @@ Pull responses to clarification questions from Linear issue comments, summarize 
 Review a Linear issue and update its description so it is ready to execute — no outstanding questions, a task checklist with validation steps, and test/commit/update instructions per task.
 
 **verify-worktree**
-Merge main into the current worktree branch, resolve conflicts, and run tests to verify the branch is ready to merge back.
+Merge staging into the current worktree branch, resolve conflicts, and run tests to verify the branch is ready to merge back.
 
 ###### skills
 
