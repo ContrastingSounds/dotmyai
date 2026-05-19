@@ -145,14 +145,14 @@
       "denyRead": [
         "~/.ssh",
         "~/.aws",
-        "~/.gnupg",
-        "~/.config/gh"
+        "~/.gnupg"
       ]
     },
     "network": {
       "allowedDomains": [
         "github.com",
         "api.github.com",
+        "github.com-personal",
         "registry.npmjs.org",
         "proxy.golang.org",
         "sum.golang.org",
@@ -165,7 +165,7 @@
         "auth.docker.io",
         "production.cloudflare.docker.com",
         "slack.com",
-        "*.slack.com"
+        "*.slack.com" 
       ],
       "deniedDomains": []
     }
