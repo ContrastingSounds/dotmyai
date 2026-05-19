@@ -1,11 +1,11 @@
 ---
-description: Merge a verified worktree branch into main, remove the worktree, delete the branch, and optionally update Linear.
+description: Merge a verified worktree branch into staging, remove the worktree, delete the branch, and optionally update Linear.
 argument-hint: (optional) Linear issue ID (e.g. CON-42) to mark as Done
 ---
 
 # Cleanup Worktree
 
-Merge a completed and verified worktree branch into main, then clean up the worktree and branch. This command assumes `/verify-worktree` has already been run successfully.
+Merge a completed and verified worktree branch into staging, then clean up the worktree and branch. This command assumes `/verify-worktree` has already been run successfully.
 
 ## Input
 
@@ -13,22 +13,22 @@ Optional Linear issue identifier: $ARGUMENTS
 
 ## Step 1: Validate Environment
 
-1. Run `git status` and confirm we are **not** on `main`. If we are on main, stop and tell the user: "Run this command from the worktree branch you want to merge, not from main."
+1. Run `git status` and confirm we are **not** on `staging`. If we are on staging, stop and tell the user: "Run this command from the worktree branch you want to merge, not from staging."
 2. Record the current branch name and the worktree working directory path.
 3. Check for uncommitted changes. If there are any, stop and tell the user: "Please commit or stash your changes before cleaning up."
 
 ## Step 2: Verify Branch is Up to Date
 
-1. Run `git log main..HEAD --oneline` to show what commits will be merged.
-2. Run `git log HEAD..main --oneline` to check if main has commits not in this branch.
-   - If main has commits not in the branch, **stop** and tell the user: "Main has commits not in this branch. Run `/verify-worktree` first to merge main into the branch and run tests before cleaning up."
+1. Run `git log staging..HEAD --oneline` to show what commits will be merged.
+2. Run `git log HEAD..staging --oneline` to check if staging has commits not in this branch.
+   - If staging has commits not in the branch, **stop** and tell the user: "Staging has commits not in this branch. Run `/verify-worktree` first to merge staging into the branch and run tests before cleaning up."
 3. Show the user the list of commits that will be merged and ask for confirmation before proceeding.
 
 ## Step 3: Merge into Main
 
 1. Identify the path to the main repo. The worktree is typically at `../<repo>-<branch>` relative to the main repo. Use `git worktree list` to find the main working tree path.
 2. Change to the main repo directory.
-3. Run `git checkout main`.
+3. Run `git checkout staging`.
 4. Run `git merge <branch>` (use the branch name recorded in Step 1).
 5. Confirm the merge succeeded. If it fails (it shouldn't if verify-worktree was run), stop and report the error.
 
@@ -54,16 +54,16 @@ If the user provided a Linear issue identifier in `$ARGUMENTS`:
 
 Summarize what was done:
 
-1. Branch merged into main
+1. Branch merged into staging
 2. Worktree removed
 3. Branch deleted
 4. Linear issue updated (if applicable)
-5. Current state: on main, working directory clean
+5. Current state: on staging, working directory clean
 
 ## Rules
 
-- **Require verification first.** If main has commits not in the branch, refuse to proceed and direct the user to `/verify-worktree`.
+- **Require verification first.** If staging has commits not in the branch, refuse to proceed and direct the user to `/verify-worktree`.
 - **Ask before merging.** Always show the commit list and get confirmation before merging into main.
 - **Do not force-delete.** Use `git branch -d` (not `-D`). If it fails, something is wrong — investigate rather than forcing.
-- **Do not push.** Merging to local main only. The user decides when to push.
+- **Do not push.** Merging to local staging only. The user decides when to push.
 - **Clean up completely.** Both the worktree directory and the branch should be removed.
