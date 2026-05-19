@@ -37,6 +37,7 @@
       "Bash(astro *)",
       "Bash(vite *)",
       "Bash(uv add *)",
+      "Bash(python3 *)",
       "Bash(go *)",
       "Bash(make *)",
       "Bash(gh *)",
@@ -66,6 +67,9 @@
       "Bash(chmod *)",
       "Bash(chown *)",
       "Bash(rm -rf /)*",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(python3 -m pip *)",
       "Bash(git push --force *)",
       "Bash(git reset --hard *)"
     ]
@@ -127,5 +131,43 @@
   "statusLine": {
     "type": "command",
     "command": "sh $HOME/.claude/statusline-command.sh"
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "autoAllowBashIfSandboxed": false,
+    "filesystem": {
+      "allowWrite": [
+        "./",
+        "~/tmp/agentics"
+      ],
+      "denyRead": [
+        "~/.ssh",
+        "~/.aws",
+        "~/.gnupg",
+        "~/.config/gh"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "api.github.com",
+        "registry.npmjs.org",
+        "proxy.golang.org",
+        "sum.golang.org",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "api.linear.app",
+        "linear.app",
+        "api.anthropic.com",
+        "registry-1.docker.io",
+        "auth.docker.io",
+        "production.cloudflare.docker.com",
+        "slack.com",
+        "*.slack.com"
+      ],
+      "deniedDomains": []
+    }
   }
 }
