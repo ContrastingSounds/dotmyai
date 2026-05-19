@@ -25,6 +25,7 @@ PRIORITY_ORDER = {
 }
 
 STATUS_ORDER = ["In Progress", "Todo", "Backlog"]
+CLOSED_STATUSES = {"Done", "Cancelled"}
 
 HIGHLIGHT_PRIORITIES = {"Urgent", "High"}
 
@@ -111,7 +112,7 @@ def main():
         sys.exit(1)
 
     all_issues_by_id = {i.get("id", ""): i for i in issues}
-    done_ids = {i.get("id", "") for i in issues if i.get("status") == "Done"}
+    done_ids = {i.get("id", "") for i in issues if i.get("status") in CLOSED_STATUSES}
 
     grouped = defaultdict(list)
     for issue in issues:
@@ -120,9 +121,15 @@ def main():
 
     if section_filter == "recently-closed":
         done_issues = grouped.get("Done", [])
-        count = len(done_issues)
-        print(f"### Recently Completed ({count} issues)\n")
-        print(format_table(done_issues, all_issues_by_id))
+        cancelled_issues = grouped.get("Cancelled", [])
+        if done_issues:
+            print(f"### Recently Completed ({len(done_issues)} issues)\n")
+            print(format_table(done_issues, all_issues_by_id))
+        if cancelled_issues:
+            print(f"### Recently Cancelled ({len(cancelled_issues)} issues)\n")
+            print(format_table(cancelled_issues, all_issues_by_id))
+        if not done_issues and not cancelled_issues:
+            print("_No recently closed issues._\n")
         return
 
     if section_filter == "open":
@@ -151,9 +158,13 @@ def main():
 
     # Default: print all sections
     done_issues = grouped.get("Done", [])
+    cancelled_issues = grouped.get("Cancelled", [])
     if done_issues:
         print(f"### Recently Completed ({len(done_issues)} issues)\n")
         print(format_table(done_issues, all_issues_by_id))
+    if cancelled_issues:
+        print(f"### Recently Cancelled ({len(cancelled_issues)} issues)\n")
+        print(format_table(cancelled_issues, all_issues_by_id))
 
     has_open = False
     for status in STATUS_ORDER:
@@ -164,7 +175,7 @@ def main():
         print(f"### {status} ({len(status_issues)})\n")
         print(format_table(status_issues, all_issues_by_id))
 
-    if not has_open and not done_issues:
+    if not has_open and not done_issues and not cancelled_issues:
         print("_No issues found._\n")
 
     unblocked = detect_unblocked(
