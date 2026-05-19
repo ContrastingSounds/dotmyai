@@ -157,6 +157,10 @@ Use dedicated tools instead of Bash equivalents. Bash is for shell-only operatio
 - Read a file before editing it — Edit will fail if you haven't.
 - For large files, use `Read` with `offset` and `limit` rather than reading the whole thing.
 
+## PR Reviews
+
+Review only the changes in the PR diff. Findings must be things the PR introduced or made worse, not pre-existing issues in surrounding code. If broader codebase problems are spotted during review, note them as separate issues to file — do not bundle them into the review findings or suggest them as PR changes.
+
 ## General Preferences
 
 - DuckDB for ad hoc data exploration.
