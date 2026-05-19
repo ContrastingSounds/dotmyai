@@ -115,6 +115,18 @@ Analyse the data to surface:
 - Missing prerequisites (e.g., Studio issues waiting on backend endpoints that don't exist yet)
 - Data races, security issues, or other P1 items in the backlog
 
+### 4e: Recommended Actions
+
+End with a short, numbered list of concrete next steps derived from everything above. Each action should be one sentence and directly actionable. Draw from:
+
+- The highest-priority open issue(s) to start next
+- Any newly unblocked work worth picking up
+- Git cleanup commands to run (branch/worktree deletion)
+- staging → main promotion if drift is significant
+- Missing backend prerequisites that block downstream projects
+
+Cap at 5 actions. Order by impact. Do not repeat analysis from earlier sections — just the action.
+
 ## Step 5: Output
 
 Render the full summary to the user as a single markdown document with clear section headers.

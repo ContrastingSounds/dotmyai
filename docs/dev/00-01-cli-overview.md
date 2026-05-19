@@ -11,6 +11,9 @@ Supplier from `author.name` in `~/.claude/plugins/marketplaces/claude-plugins-of
 Initialize a new CLAUDE.md with codebase documentation. **(claude)**
 `/init`
 
+Get a summary of the current project using Linear, GitHub, git. **(custom)**
+`/project-status`
+
 Resolve a Linear project, issue, PR, or branch to the correct worktree and enter it. **(custom)**
 `/checkout-work <reference>`
 

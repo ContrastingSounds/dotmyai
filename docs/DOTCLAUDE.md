@@ -34,8 +34,17 @@ Review an entire codebase for quality, fitness for purpose, and health. Use when
 **execute-issue**
 Execute a work package (parent issue with sub-issues) or a single issue. Creates a worktree from staging, works through tasks with tests, commits, and Linear updates, then raises a PR to staging.
 
+**execute-plan**
+Execute a local plan file — create tasks with dependencies, work through them with maximum parallelism, test and commit each task separately.
+
+**feature-dev-linear**
+Guided feature planning with codebase exploration and architecture design. Produces a parent Linear issue with self-contained sub-issues ready for /execute-issue.
+
 **format-tables**
 Format markdown tables to have equal column widths
+
+**project-status**
+Summarise project status from Linear, GitHub, and git. Shows recently completed work, planned work with dependencies, git branch/worktree housekeeping, and current concerns.
 
 **worktree-init**
 Generate a .claude/CLAUDE.local.md summarizing the intent and implementation of the current worktree branch
