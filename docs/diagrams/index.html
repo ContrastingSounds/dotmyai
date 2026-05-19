@@ -186,6 +186,26 @@
       gap: 6px;
       padding: 4px 0;
     }
+    .cmd-systems {
+      display: flex;
+      gap: 3px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .sys-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sys-icon.li { background: #5e6ad2; }
+    .sys-icon.gh { background: #24292f; }
+    .sys-icon.gt { background: #f05033; }
     .cmd-badge {
       display: inline-block;
       width: 6px;
@@ -503,28 +523,28 @@
           </div>
           <div class="phase-divider"></div>
           <div class="phase-commands">
-            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/init</span></div>
+            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/init</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Initialize CLAUDE.md</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/project-status</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/project-status</span><span class="cmd-systems"><span class="sys-icon li">L</span><span class="sys-icon gh">G</span><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Linear + GitHub + git summary</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/checkout-work</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/checkout-work</span><span class="cmd-systems"><span class="sys-icon li">L</span><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Resolve ref &rarr; worktree</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/create-plan-from-issue</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/create-plan-from-issue</span><span class="cmd-systems"><span class="sys-icon li">L</span></span></div>
             <div class="cmd-desc">Draft plan, post questions</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/validate-issue</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/validate-issue</span><span class="cmd-systems"><span class="sys-icon li">L</span></span></div>
             <div class="cmd-desc">Make issue execution-ready</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/pull-issue-responses</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/pull-issue-responses</span><span class="cmd-systems"><span class="sys-icon li">L</span></span></div>
             <div class="cmd-desc">Summarize Q&amp;A threads</div>
 
-            <div class="cmd-item"><span class="cmd-badge shell"></span><span class="cmd-name">new-tree</span></div>
+            <div class="cmd-item"><span class="cmd-badge shell"></span><span class="cmd-name">new-tree</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Create worktree + branch</div>
 
-            <div class="cmd-item"><span class="cmd-badge shell"></span><span class="cmd-name">plan-tree</span></div>
+            <div class="cmd-item"><span class="cmd-badge shell"></span><span class="cmd-name">plan-tree</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Worktree + execution prompt</div>
           </div>
         </div>
@@ -538,19 +558,19 @@
           </div>
           <div class="phase-divider"></div>
           <div class="phase-commands">
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/execute-issue</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/execute-issue</span><span class="cmd-systems"><span class="sys-icon li">L</span><span class="sys-icon gh">G</span><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Parallel agents, commits, PR</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/execute-plan</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/execute-plan</span><span class="cmd-systems"><span class="sys-icon gh">G</span><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Local plan &rarr; tasks + PR</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/feature-dev-linear</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/feature-dev-linear</span><span class="cmd-systems"><span class="sys-icon li">L</span></span></div>
             <div class="cmd-desc">Plan, decompose, create issues</div>
 
-            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/feature-dev</span></div>
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/feature-dev</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Guided feature development</div>
 
-            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/commit</span></div>
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/commit</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Create a git commit</div>
           </div>
         </div>
@@ -564,22 +584,22 @@
           </div>
           <div class="phase-divider"></div>
           <div class="phase-commands">
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/codebase-review</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/codebase-review</span><span class="cmd-systems"><span class="sys-icon li">L</span><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Full codebase health scan</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/verify-worktree</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/verify-worktree</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Merge main, resolve, test</div>
 
-            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/review</span></div>
+            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/review</span><span class="cmd-systems"><span class="sys-icon gh">G</span></span></div>
             <div class="cmd-desc">Quick PR review</div>
 
-            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/pr-review-toolkit</span></div>
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/pr-review-toolkit</span><span class="cmd-systems"><span class="sys-icon gh">G</span></span></div>
             <div class="cmd-desc">Multi-agent specialist review</div>
 
-            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/security-review</span></div>
+            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/security-review</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Security scan of changes</div>
 
-            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/simplify</span></div>
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/simplify</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Code quality + reuse check</div>
           </div>
         </div>
@@ -593,10 +613,10 @@
           </div>
           <div class="phase-divider"></div>
           <div class="phase-commands">
-            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/commit-push-pr</span></div>
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/commit-push-pr</span><span class="cmd-systems"><span class="sys-icon gh">G</span><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Commit, push, open PR</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/cleanup-worktree</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/cleanup-worktree</span><span class="cmd-systems"><span class="sys-icon li">L</span><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Merge to main, clean up</div>
           </div>
         </div>
@@ -610,19 +630,19 @@
           </div>
           <div class="phase-divider"></div>
           <div class="phase-commands">
-            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/revise-claude-md</span></div>
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/revise-claude-md</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Update CLAUDE.md with learnings</div>
 
-            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/claude-md-improver</span></div>
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/claude-md-improver</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Audit CLAUDE.md files</div>
 
             <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/automation-recommender</span></div>
             <div class="cmd-desc">Suggest Claude Code automations</div>
 
-            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/git-xray</span></div>
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/git-xray</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Git history diagnostics</div>
 
-            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/clean_gone</span></div>
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/clean_gone</span><span class="cmd-systems"><span class="sys-icon gt">G</span></span></div>
             <div class="cmd-desc">Remove stale branches</div>
           </div>
         </div>
