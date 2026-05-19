@@ -3,7 +3,7 @@
 ###### commands
 
 **cleanup-worktree**
-Merge a verified worktree branch into staging, remove the worktree, delete the branch, and optionally update Linear.
+Merge a verified worktree branch into staging, close the GitHub PR and Linear issue, remove the worktree, and delete the branch.
 
 **create-plan-from-issue**
 Pull a Linear issue, review requirements, create a detailed implementation plan, and raise clarification questions as comments. Planning only — no execution.
