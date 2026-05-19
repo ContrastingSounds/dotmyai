@@ -48,6 +48,7 @@
       "Bash(uv add *)",
       "Bash(python3 *)",
       "Bash(go *)",
+      "Bash(GOCACHE=* go *)",
       "Bash(make *)",
       "Bash(gh *)",
       "Bash(git status *)",
