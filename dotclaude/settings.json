@@ -140,7 +140,8 @@
     "filesystem": {
       "allowWrite": [
         "./",
-        "~/tmp/agentics"
+        "~/tmp/agentics",
+        ".git/worktrees/"
       ],
       "denyRead": [
         "~/.ssh",
