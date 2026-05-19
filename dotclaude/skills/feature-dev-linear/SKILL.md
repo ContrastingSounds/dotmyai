@@ -235,11 +235,29 @@ Include which approach was chosen in Phase 3 and why.]
 Sub-issues are created and ready for `/execute-issue <ID>`.
 ```
 
-6. Draft sub-issue outlines for each work unit. These are lightweight drafts for user review in Phase 5 — not full descriptions. For each work unit, capture:
+6. **Create each decomposition sub-issue in Linear** as a child of the **Build** issue. These are draft descriptions for user review in Phase 5 — not the full self-contained descriptions needed for execution (those are expanded in Phase 6).
+
+   For each work unit, create a Linear issue with:
    - **Title** following convention: `[FAMILY] [VARIANT]: [Imperative description]`
-   - **Summary**: 3-4 sentences on what the sub-issue will accomplish
-   - **Key files**: Which files will be created or modified
-   - **Dependencies**: Which other sub-issues must complete first, and why
+   - **Description** containing:
+     - **Summary**: 3-4 sentences on what the sub-issue will accomplish
+     - **Key files**: Which files will be created or modified
+     - **Dependencies**: Which other sub-issues must complete first, and why
+
+   ```
+   mcp__linear__save_issue(
+     title: "<title following convention>",
+     team: "<team from parent>",
+     project: "<project from parent>",
+     assignee: "me",
+     state: "Todo",
+     priority: 3,
+     parentId: "<Build issue ID>",
+     description: "## Summary\n[3-4 sentences]\n\n## Key Files\n[file list]\n\n## Dependencies\n[dependency list or 'None']"
+   )
+   ```
+
+   Record all returned sub-issue IDs — they will be updated with full descriptions in Phase 6.
 
 7. Mark Phase 4 completed.
 
@@ -247,7 +265,7 @@ Sub-issues are created and ready for `/execute-issue <ID>`.
 
 ## Phase 5: User Review
 
-**Goal**: Present the detailed breakdown for approval or redirection. The strategic direction was already chosen in Phase 3; this review covers the specifics of the decomposition.
+**Goal**: Present the detailed breakdown for approval or redirection. The strategic direction was already chosen in Phase 3; this review covers the specifics of the decomposition. All issues (parent, Build, Test, and decomposition sub-issues) already exist in Linear as drafts from Phase 4.
 
 ### Actions
 
@@ -262,16 +280,16 @@ Sub-issues are created and ready for `/execute-issue <ID>`.
 3. **Wait for user response before proceeding.**
 
    - Approval ("looks good", "proceed", etc.) → continue to Phase 6 as-is
-   - Specific redirections ("drop variant X", "add Y", "reorder these") → incorporate feedback, briefly re-present the changed portions, then continue
+   - Specific redirections ("drop variant X", "add Y", "reorder these") → incorporate feedback into the Linear issues (update, create, or cancel sub-issues as needed), briefly re-present the changed portions, then continue
    - "Whatever you think is best" → continue to Phase 6 with your recommendation
 
 4. Mark Phase 5 completed.
 
 ---
 
-## Phase 6: Linear Creation
+## Phase 6: Linear Enrichment
 
-**Goal**: Create sub-issues in Linear with full self-contained descriptions, set up blocking relations, and post a summary. The parent issue was already created in Phase 4.
+**Goal**: Expand the draft sub-issues (created in Phase 4) into full self-contained descriptions, set up blocking relations, and post a summary. The parent issue and all sub-issues already exist in Linear from Phase 4.
 
 ### Actions
 
@@ -282,7 +300,7 @@ Sub-issues are created and ready for `/execute-issue <ID>`.
    mcp__linear__save_issue(id: "<parent ID>", description: "<revised parent description>")
    ```
 
-3. **Create each decomposition sub-issue** as a child of the **Build** issue (not the parent). Enrich each Phase 4 draft into a full, self-contained description. Every sub-issue must contain everything an executing agent needs — it must NOT reference the parent for context. Use the Phase 4 outline (title, summary, key files, dependencies) as the starting point, then expand it into this template:
+3. **Update each decomposition sub-issue** (already created as children of the Build issue in Phase 4). Enrich each Phase 4 draft into a full, self-contained description. Every sub-issue must contain everything an executing agent needs — it must NOT reference the parent for context. Use the Phase 4 draft (title, summary, key files, dependencies) as the starting point, then expand it into this template:
 
 ```markdown
 ## Context
@@ -318,16 +336,10 @@ then run `go test ./pkg/handlers/... -v` to verify."]
 - [ ] All tests pass
 ```
 
-   For each sub-issue:
+   For each sub-issue (using the ID returned in Phase 4):
    ```
    mcp__linear__save_issue(
-     title: "<title following convention>",
-     team: "<team from parent>",
-     project: "<project from parent>",
-     assignee: "me",
-     state: "Todo",
-     priority: 3,
-     parentId: "<Build issue ID>",
+     id: "<sub-issue ID from Phase 4>",
      description: "<full self-contained description>"
    )
    ```
