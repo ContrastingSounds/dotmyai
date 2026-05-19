@@ -69,6 +69,15 @@
       "Bash(git rev-parse *)",
       "Bash(git show-ref *)",
       "Bash(git symbolic-ref *)",
+      "Bash(git -C *)",
+      "Bash(git merge-base *)",
+      "Bash(git rev-list *)",
+      "Bash(git push *)",
+      "Bash(git ls-tree *)",
+      "Bash(git grep *)",
+      "Bash(swift build *)",
+      "Bash(swift package *)",
+      "Bash(./scripts/build.sh *)",
       "Bash(~/.myai/dotclaude/skills/checkout-work/scripts/checkout-work.sh *)"
     ],
     "deny": [
