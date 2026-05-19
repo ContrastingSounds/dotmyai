@@ -199,6 +199,7 @@ mcp__linear__save_issue(
   team: "<team>",
   project: "<project name>",
   assignee: "me",
+  state: "Todo",
   description: "<populated template>"
 )
 ```
