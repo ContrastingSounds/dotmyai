@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>/execute-issue — Golden Path</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f5f6f8; --card: #ffffff; --text: #1a1a2e; --text-muted: #5a5a7a;
+      --text-light: #8a8aaa; --border: #e2e4e8;
+      --phase: #4a6db8; --phase-light: #e8eef8;
+      --human: #2d7d6b; --human-light: #e4f2ee;
+      --agent: #4a5da8; --agent-light: #e8ecf6;
+      --external: #7a5a8a; --external-light: #f0eaf4;
+      --gate: #c4792a; --gate-light: #fdf3e8;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 32px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    .breadcrumb a { color: var(--phase); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .title-bar { margin-bottom: 8px; }
+    .title-bar h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .title-bar h1 code { font-family: 'JetBrains Mono', monospace; color: var(--phase); }
+    .title-bar p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+    .meta-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .meta-chip { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
+    .meta-chip.phase { background: var(--phase-light); color: var(--phase); }
+    .meta-chip.input { background: #f0f1f4; color: var(--text-muted); }
+    .meta-chip.output { background: #f0f1f4; color: var(--text-muted); }
+    .swimlane { display: grid; grid-template-columns: 72px 200px 1fr 200px; gap: 0; }
+    .lane-header { padding: 10px 12px; text-align: center; font-size: 12px; font-weight: 700; border-bottom: 2px solid var(--border); margin-bottom: 6px; }
+    .lane-header.phase-col { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+    .lane-header.human { color: var(--human); border-bottom-color: var(--human); }
+    .lane-header.agent { color: var(--agent); border-bottom-color: var(--agent); }
+    .lane-header.external { color: var(--external); border-bottom-color: var(--external); }
+    .phase-bracket { display: flex; align-items: center; justify-content: center; writing-mode: vertical-lr; transform: rotate(180deg); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-right: 3px solid var(--phase); padding: 6px 4px; background: var(--phase-light); color: var(--phase); }
+    .step-cell { padding: 6px 10px; display: flex; align-items: center; min-height: 44px; border-bottom: 1px solid #f0f1f4; }
+    .step-cell.empty {}
+    .event { border-radius: 8px; padding: 8px 12px; font-size: 12px; width: 100%; }
+    .event.human { background: var(--human-light); border-left: 3px solid var(--human); }
+    .event.agent { background: var(--agent-light); border-left: 3px solid var(--agent); }
+    .event.external { background: var(--external-light); border-left: 3px solid var(--external); }
+    .event.gate { background: var(--gate-light); border-left: 3px solid var(--gate); }
+    .event .event-text { font-size: 12px; color: var(--text); }
+    .event .event-detail { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+    .event .event-cmd { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--agent); display: block; margin-top: 2px; }
+    .ext-badges { display: flex; gap: 4px; margin-top: 4px; }
+    .ext-badge { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 3px; color: white; }
+    .ext-badge.linear { background: #5e6ad2; }
+    .ext-badge.github { background: #24292f; }
+    .ext-badge.git { background: #f05033; }
+    .gate-label { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gate); background: var(--gate-light); padding: 2px 6px; border-radius: 3px; margin-top: 4px; }
+
+    .parallel-callout { background: var(--phase-light); border: 1.5px dashed var(--phase); border-radius: 8px; padding: 10px 14px; width: 100%; }
+    .parallel-callout .parallel-title { font-size: 11px; font-weight: 600; color: var(--phase); text-transform: uppercase; letter-spacing: 0.5px; }
+    .parallel-agents { display: flex; gap: 6px; margin-top: 6px; }
+    .parallel-agent-box { flex: 1; background: var(--card); border-radius: 6px; padding: 6px 8px; text-align: center; font-size: 10px; color: var(--text-muted); border: 1px solid var(--border); }
+    .parallel-agent-box .agent-label { font-weight: 600; color: var(--agent); font-size: 10px; }
+
+    .loop-indicator { background: var(--phase-light); border: 1px solid var(--phase); border-radius: 6px; padding: 4px 8px; font-size: 10px; color: var(--phase); font-weight: 600; text-align: center; margin-top: 4px; }
+
+    .nav-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .nav-link { font-size: 13px; color: var(--phase); text-decoration: none; font-weight: 500; }
+    .nav-link:hover { text-decoration: underline; }
+    .nav-link.next { margin-left: auto; }
+    .legend { display: flex; justify-content: center; gap: 16px; margin-top: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+    .legend-dot.human { background: var(--human); }
+    .legend-dot.agent { background: var(--agent); }
+    .legend-dot.external { background: var(--external); }
+    .legend-dot.gate { background: var(--gate); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="breadcrumb"><a href="index.html">Pipeline</a> &rsaquo; Golden Path &rsaquo; /execute-issue</div>
+
+  <div class="title-bar">
+    <h1><code>/execute-issue</code></h1>
+    <p>Execute a validated Linear issue end-to-end with parallel agent dispatch</p>
+  </div>
+
+  <div class="meta-row">
+    <span class="meta-chip phase">02 Build</span>
+    <span class="meta-chip input">Input: Linear issue ID (e.g. CON-129)</span>
+    <span class="meta-chip output">Output: PR to staging, all tasks committed, Linear updated</span>
+  </div>
+
+  <div class="swimlane">
+    <div class="lane-header phase-col">Step</div>
+    <div class="lane-header human">Human</div>
+    <div class="lane-header agent">Claude Code Agent</div>
+    <div class="lane-header external">External Systems</div>
+
+    <!-- Fetch & Plan -->
+    <div class="phase-bracket" style="grid-row: span 3;">Plan</div>
+
+    <div class="step-cell">
+      <div class="event human">
+        <div class="event-text">"Execute this issue"</div>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Fetches issue, comments, sub-issues. Determines mode.</div>
+        <div class="event-detail">Work Package (sub-issues) or Single Issue (checklist). Offers to create sub-issues if 4+ items.</div>
+        <span class="event-cmd">mcp__linear__get_issue, list_comments, list_issues</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Issue + children fetched</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Plans execution order: blocking relations, file overlap, logical deps</div>
+        <div class="event-detail">Posts execution order comment. Moves parent to In Progress.</div>
+        <span class="event-cmd">mcp__linear__save_comment, save_issue</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Execution order posted, status &rarr; In Progress</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <!-- Setup -->
+    <div class="phase-bracket" style="grid-row: span 2;">Setup</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Creates worktree and branch from staging</div>
+        <span class="event-cmd">git worktree add ../$REPO-$ID -b $BRANCH origin/staging</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Worktree + branch created</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Loads context: CLAUDE.md, language guidelines, design docs, target files</div>
+        <div class="event-detail">Reads every file that will be modified across all tasks</div>
+        <span class="event-cmd">EnterWorktree, Read, mcp__linear__get_document</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Design docs fetched</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <!-- Dispatch Loop -->
+    <div class="phase-bracket" style="grid-row: span 4;">Dispatch</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Creates local tasks with file-overlap and blocking dependencies</div>
+        <span class="event-cmd">TaskCreate (per sub-issue or checklist item)</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="parallel-callout">
+        <div class="parallel-title">Parallel Agent Dispatch Loop</div>
+        <div class="parallel-agents">
+          <div class="parallel-agent-box">
+            <div class="agent-label">Agent A</div>
+            Task 1<br>read &rarr; code &rarr; test &rarr; commit
+          </div>
+          <div class="parallel-agent-box">
+            <div class="agent-label">Agent B</div>
+            Task 2<br>read &rarr; code &rarr; test &rarr; commit
+          </div>
+          <div class="parallel-agent-box">
+            <div class="agent-label">Agent C</div>
+            Task 3<br>(blocked, waits)
+          </div>
+        </div>
+        <div class="event-detail" style="margin-top: 6px;">All ready tasks dispatched in ONE message. File overlap = sequential. Cross-task context passed via metadata.</div>
+        <div class="loop-indicator">Repeats until all tasks complete</div>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">One commit per task. Sub-issue status &rarr; Done per task.</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Processes results: verifies commits, updates tasks and Linear</div>
+        <div class="event-detail">On failure: posts blocker comment, asks user, doesn't block unrelated tasks</div>
+        <span class="event-cmd">TaskUpdate, mcp__linear__save_comment</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Finds next ready tasks (unblocked), dispatches next batch</div>
+        <div class="event-detail">Blocked tasks run once their dependencies complete</div>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <!-- Validate & Ship -->
+    <div class="phase-bracket" style="grid-row: span 3;">Ship</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Runs full test suite from worktree</div>
+        <div class="event-detail">Stops if any test fails — diagnose and fix before continuing</div>
+        <span class="event-cmd">go test ./... -v (or language equivalent)</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Pushes branch, creates PR to staging</div>
+        <div class="event-detail">PR body: summary, per-task changes, test results, Linear link</div>
+        <span class="event-cmd">git push -u origin $BRANCH && gh pr create --base staging</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">PR created, link posted on parent issue</div>
+        <div class="ext-badges"><span class="ext-badge github">GitHub</span><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Exits worktree (kept on disk), moves parent to Needs Verification</div>
+        <span class="event-cmd">ExitWorktree(action: "keep"), mcp__linear__save_issue</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Status &rarr; Needs Verification</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a href="validate-issue.html" class="nav-link">&larr; /validate-issue</a>
+    <a href="verify-worktree.html" class="nav-link next">Next: /verify-worktree &rarr;</a>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot human"></span> Human</div>
+    <div class="legend-item"><span class="legend-dot agent"></span> Agent</div>
+    <div class="legend-item"><span class="legend-dot external"></span> External</div>
+    <div class="legend-item"><span class="legend-dot gate"></span> Decision gate</div>
+  </div>
+</div>
+</body>
+</html>

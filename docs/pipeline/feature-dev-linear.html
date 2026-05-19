@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>/feature-dev-linear — Golden Path</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f5f6f8; --card: #ffffff; --text: #1a1a2e; --text-muted: #5a5a7a;
+      --text-light: #8a8aaa; --border: #e2e4e8;
+      --phase: #3d8a9e; --phase-light: #e8f4f7;
+      --human: #2d7d6b; --human-light: #e4f2ee;
+      --agent: #4a5da8; --agent-light: #e8ecf6;
+      --external: #7a5a8a; --external-light: #f0eaf4;
+      --gate: #c4792a; --gate-light: #fdf3e8;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 32px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    .breadcrumb a { color: var(--phase); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    .title-bar { margin-bottom: 8px; }
+    .title-bar h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .title-bar h1 code { font-family: 'JetBrains Mono', monospace; color: var(--phase); }
+    .title-bar p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+    .meta-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .meta-chip { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
+    .meta-chip.phase { background: var(--phase-light); color: var(--phase); }
+    .meta-chip.input { background: #f0f1f4; color: var(--text-muted); }
+    .meta-chip.output { background: #f0f1f4; color: var(--text-muted); }
+
+    .swimlane { display: grid; grid-template-columns: 72px 200px 1fr 200px; gap: 0; }
+    .lane-header { padding: 10px 12px; text-align: center; font-size: 12px; font-weight: 700; border-bottom: 2px solid var(--border); margin-bottom: 6px; }
+    .lane-header.phase-col { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+    .lane-header.human { color: var(--human); border-bottom-color: var(--human); }
+    .lane-header.agent { color: var(--agent); border-bottom-color: var(--agent); }
+    .lane-header.external { color: var(--external); border-bottom-color: var(--external); }
+
+    .phase-bracket { display: flex; align-items: center; justify-content: center; writing-mode: vertical-lr; transform: rotate(180deg); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-right: 3px solid var(--phase); padding: 6px 4px; background: var(--phase-light); color: var(--phase); }
+    .step-cell { padding: 6px 10px; display: flex; align-items: center; min-height: 44px; border-bottom: 1px solid #f0f1f4; }
+    .step-cell.empty {}
+
+    .event { border-radius: 8px; padding: 8px 12px; font-size: 12px; width: 100%; }
+    .event.human { background: var(--human-light); border-left: 3px solid var(--human); }
+    .event.agent { background: var(--agent-light); border-left: 3px solid var(--agent); }
+    .event.external { background: var(--external-light); border-left: 3px solid var(--external); }
+    .event.gate { background: var(--gate-light); border-left: 3px solid var(--gate); }
+    .event .event-text { font-size: 12px; color: var(--text); }
+    .event .event-detail { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+    .event .event-cmd { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--agent); display: block; margin-top: 2px; }
+    .ext-badges { display: flex; gap: 4px; margin-top: 4px; }
+    .ext-badge { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 3px; color: white; }
+    .ext-badge.linear { background: #5e6ad2; }
+    .ext-badge.github { background: #24292f; }
+    .ext-badge.git { background: #f05033; }
+
+    .gate-label { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gate); background: var(--gate-light); padding: 2px 6px; border-radius: 3px; margin-top: 4px; }
+
+    .nav-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .nav-link { font-size: 13px; color: var(--phase); text-decoration: none; font-weight: 500; }
+    .nav-link:hover { text-decoration: underline; }
+    .nav-link.next { margin-left: auto; }
+
+    .legend { display: flex; justify-content: center; gap: 16px; margin-top: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+    .legend-dot.human { background: var(--human); }
+    .legend-dot.agent { background: var(--agent); }
+    .legend-dot.external { background: var(--external); }
+    .legend-dot.gate { background: var(--gate); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="breadcrumb"><a href="index.html">Pipeline</a> &rsaquo; Golden Path &rsaquo; /feature-dev-linear</div>
+
+  <div class="title-bar">
+    <h1><code>/feature-dev-linear</code></h1>
+    <p>Guided feature planning with codebase exploration and architecture design</p>
+  </div>
+
+  <div class="meta-row">
+    <span class="meta-chip phase">01 Prep</span>
+    <span class="meta-chip input">Input: feature description or Linear issue ID</span>
+    <span class="meta-chip output">Output: parent + Build/Test sub-issues in Linear</span>
+  </div>
+
+  <div class="swimlane">
+    <div class="lane-header phase-col">Phase</div>
+    <div class="lane-header human">Human</div>
+    <div class="lane-header agent">Claude Code Agent</div>
+    <div class="lane-header external">External Systems</div>
+
+    <!-- Phase 1: Discovery -->
+    <div class="phase-bracket" style="grid-row: span 2;">Discovery</div>
+
+    <div class="step-cell">
+      <div class="event human">
+        <div class="event-text">"I want to build [feature]"</div>
+        <div class="event-detail">Or provides a Linear issue ID</div>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Fetches issue context, team, project, labels</div>
+        <div class="event-detail">Also fetches completed sibling issues to learn decomposition patterns</div>
+        <span class="event-cmd">mcp__linear__get_issue, list_comments</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Issue + project docs read</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 2: Codebase Research -->
+    <div class="phase-bracket" style="grid-row: span 2;">Research</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Launches 2-3 code-explorer agents in parallel</div>
+        <div class="event-detail">Existing patterns, domain structures, integration points</div>
+        <span class="event-cmd">Agent(subagent_type: "code-explorer")</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Reads all identified files, builds deep understanding</div>
+        <div class="event-detail">5-10 key files per explorer, patterns and conventions cataloged</div>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <!-- Phase 3: Architecture Options -->
+    <div class="phase-bracket" style="grid-row: span 3;">Architect</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Launches code-architect agents with Phase 2 findings</div>
+        <span class="event-cmd">Agent(subagent_type: "code-architect")</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Presents 2-3 genuinely distinct approaches</div>
+        <div class="event-detail">Each: name, philosophy, files affected, tradeoffs, estimated scope</div>
+        <span class="gate-label">Decision Gate</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell">
+      <div class="event gate">
+        <div class="event-text">Chooses architecture approach</div>
+        <div class="event-detail">Or requests a hybrid of approaches</div>
+        <span class="gate-label">Required</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell empty"></div>
+
+    <!-- Phase 4: Decomposition -->
+    <div class="phase-bracket" style="grid-row: span 2;">Decompose</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Determines decomposition axis, enumerates work units</div>
+        <div class="event-detail">UI: component families &times; variants. Backend: entities &times; operations. Data: stages &times; formats.</div>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Creates parent issue, Build sub-issue, Test sub-issue (blocked by Build)</div>
+        <span class="event-cmd">mcp__linear__save_issue</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Parent + Build + Test issues created</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 5: User Review -->
+    <div class="phase-bracket" style="grid-row: span 2;">Review</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Presents full plan: sub-issue table with titles, files, deps, complexity</div>
+        <span class="gate-label">Decision Gate</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell">
+      <div class="event gate">
+        <div class="event-text">Approves breakdown or requests modifications</div>
+        <span class="gate-label">Required</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell empty"></div>
+
+    <!-- Phase 6: Linear Creation -->
+    <div class="phase-bracket" style="grid-row: span 2;">Create</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Creates all decomposition sub-issues under Build</div>
+        <div class="event-detail">Each is fully self-contained: context, task, files, validation, acceptance criteria. No references to parent.</div>
+        <span class="event-cmd">mcp__linear__save_issue (per sub-issue)</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Sub-issues + blocking relations created</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Posts summary comment with execution order</div>
+        <div class="event-detail">"Ready for /execute-issue &lt;Build ID&gt;"</div>
+        <span class="event-cmd">mcp__linear__save_comment</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Summary comment on parent</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 7: Quality Review -->
+    <div class="phase-bracket" style="grid-row: span 2;">Quality</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Designs integration test plan: cross-component, e2e flows, regressions</div>
+        <div class="event-detail">Simple (1-2 areas) = single Test issue. Complex (3+) = Test sub-issues.</div>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Populates Test issue and updates parent with integration test plan</div>
+        <span class="event-cmd">mcp__linear__save_issue</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Test issue populated, parent updated</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-footer">
+    <a href="index.html" class="nav-link">&larr; Pipeline</a>
+    <a href="validate-issue.html" class="nav-link next">Next: /validate-issue &rarr;</a>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot human"></span> Human</div>
+    <div class="legend-item"><span class="legend-dot agent"></span> Agent</div>
+    <div class="legend-item"><span class="legend-dot external"></span> External</div>
+    <div class="legend-item"><span class="legend-dot gate"></span> Decision gate</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dev Workflow Pipeline</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --text-muted: #5a5a7a;
+      --border: #e2e4e8;
+      --code-bg: #f0f1f4;
+      --prep: #3d8a9e;
+      --build: #4a6db8;
+      --review: #7c5db8;
+      --deploy: #b86a3d;
+      --refine: #9a804a;
+      --prov-custom: #3d7a5f;
+      --prov-shell: #6b6b6b;
+      --prov-claude: #5a6abf;
+      --prov-plugin: #8a6aaf;
+      --prov-script: #8a7044;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 32px;
+      min-width: 900px;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* ── Title ── */
+    .title-bar {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .title-bar h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .title-bar p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── Section Labels ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+
+    /* ── Planning Hierarchy ── */
+    .hierarchy-band {
+      background: #eef0f5;
+      border-radius: 12px;
+      padding: 20px 28px 18px;
+      margin-bottom: 28px;
+    }
+    .hierarchy-chain {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+    .hierarchy-node {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      text-align: center;
+      min-width: 160px;
+    }
+    .hierarchy-node .level {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .hierarchy-node .location {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .hierarchy-node .owner {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--prov-custom);
+      margin-top: 4px;
+    }
+    .hierarchy-arrow {
+      width: 40px;
+      text-align: center;
+      color: #b0b4c0;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .hierarchy-annotation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 0 20px;
+    }
+
+    /* ── Pipeline ── */
+    .pipeline-band {
+      margin-bottom: 28px;
+    }
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .phase-card {
+      background: var(--card);
+      border-radius: 10px;
+      border-top: 4px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      overflow: hidden;
+      position: relative;
+    }
+    .phase-card[data-phase="prep"]    { border-top-color: var(--prep); }
+    .phase-card[data-phase="build"]   { border-top-color: var(--build); }
+    .phase-card[data-phase="review"]  { border-top-color: var(--review); }
+    .phase-card[data-phase="deploy"]  { border-top-color: var(--deploy); }
+    .phase-card[data-phase="refine"]  { border-top-color: var(--refine); }
+
+    .phase-header {
+      padding: 14px 16px 10px;
+    }
+    .phase-number {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.6;
+    }
+    .phase-card[data-phase="prep"]    .phase-number { color: var(--prep); }
+    .phase-card[data-phase="build"]   .phase-number { color: var(--build); }
+    .phase-card[data-phase="review"]  .phase-number { color: var(--review); }
+    .phase-card[data-phase="deploy"]  .phase-number { color: var(--deploy); }
+    .phase-card[data-phase="refine"]  .phase-number { color: var(--refine); }
+
+    .phase-name {
+      font-size: 17px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .phase-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .phase-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 16px;
+    }
+    .phase-commands {
+      padding: 10px 16px 14px;
+    }
+    .cmd-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
+    .cmd-badge {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cmd-badge.custom  { background: var(--prov-custom); }
+    .cmd-badge.shell   { background: var(--prov-shell); }
+    .cmd-badge.claude  { background: var(--prov-claude); }
+    .cmd-badge.plugin  { background: var(--prov-plugin); }
+    .cmd-badge.script  { background: var(--prov-script); }
+
+    .cmd-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .cmd-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      padding-left: 12px;
+      margin-top: -2px;
+      margin-bottom: 4px;
+    }
+
+    /* ── Typical Flow Trace ── */
+    .flow-trace {
+      background: #eef0f5;
+      border-radius: 10px;
+      padding: 14px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .flow-trace-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-right: 16px;
+    }
+    .flow-step {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      text-decoration: none;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    a.flow-step:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      background: #f8f9fb;
+    }
+    .flow-step[data-phase="prep"]    { border-color: var(--prep); color: var(--prep); }
+    .flow-step[data-phase="build"]   { border-color: var(--build); color: var(--build); }
+    .flow-step[data-phase="review"]  { border-color: var(--review); color: var(--review); }
+    .flow-step[data-phase="deploy"]  { border-color: var(--deploy); color: var(--deploy); }
+    .flow-step[data-phase="refine"]  { border-color: var(--refine); color: var(--refine); }
+    .flow-arrow {
+      margin: 0 6px;
+      color: #b0b4c0;
+      font-size: 14px;
+    }
+
+    /* ── Infrastructure Band ── */
+    .infra-band {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .ext-system {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      border-left: 4px solid var(--border);
+    }
+    .ext-system.linear  { border-left-color: #5e6ad2; }
+    .ext-system.github  { border-left-color: #24292f; }
+    .ext-system.git     { border-left-color: #f05033; }
+    .ext-system.local   { border-left-color: #4caf50; }
+    .ext-title {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ext-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+    }
+    .ext-icon.linear  { background: #5e6ad2; }
+    .ext-icon.github  { background: #24292f; }
+    .ext-icon.git     { background: #f05033; }
+    .ext-icon.local   { background: #4caf50; }
+    .ext-items {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .ext-item {
+      padding: 2px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ext-item::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #8a8aaa;
+      flex-shrink: 0;
+    }
+    .ext-connects {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .ext-connects-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #8a8aaa;
+      margin-bottom: 4px;
+    }
+    .ext-cmd-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .ext-cmd {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text-muted);
+    }
+
+    /* ── Original Infra Cards ── */
+    .infra-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .infra-card {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .infra-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .branch-diagram {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+    .branch-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .branch-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .branch-dot.main    { background: #4caf50; }
+    .branch-dot.staging { background: #ff9800; }
+    .branch-dot.work    { background: #2196f3; }
+    .branch-label {
+      font-size: 12px;
+    }
+    .branch-note {
+      font-family: 'Inter', sans-serif;
+      font-size: 10.5px;
+      color: var(--text-muted);
+      opacity: 0.8;
+    }
+    .infra-list {
+      list-style: none;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .infra-list li {
+      padding: 3px 0;
+      padding-left: 14px;
+      position: relative;
+    }
+    .infra-list li::before {
+      content: '>';
+      position: absolute;
+      left: 0;
+      color: var(--prov-custom);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    /* ── Provenance Legend ── */
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Title -->
+    <div class="title-bar">
+      <h1>Agentic Dev Workflow</h1>
+      <p>A Claude Code pipeline for solo developers &mdash; from planning through deployment</p>
+    </div>
+
+    <!-- Planning Hierarchy -->
+    <div class="section-label">Planning Hierarchy</div>
+    <div class="hierarchy-band">
+      <div class="hierarchy-chain">
+        <div class="hierarchy-node">
+          <div class="level">Initiative (PRD)</div>
+          <div class="location">Linear Initiative</div>
+          <div class="owner">human writes</div>
+        </div>
+        <div class="hierarchy-arrow">&rarr;</div>
+        <div class="hierarchy-node">
+          <div class="level">Project (PRD)</div>
+          <div class="location">Linear Project</div>
+          <div class="owner">human writes</div>
+        </div>
+        <div class="hierarchy-arrow">&rarr;</div>
+        <div class="hierarchy-node">
+          <div class="level">Issue (Plan)</div>
+          <div class="location">Linear Issue</div>
+          <div class="owner">human + agent</div>
+        </div>
+        <div class="hierarchy-arrow">&rarr;</div>
+        <div class="hierarchy-node">
+          <div class="level">Local Task</div>
+          <div class="location">~/.claude/tasks/</div>
+          <div class="owner">agent creates</div>
+        </div>
+      </div>
+      <div class="hierarchy-annotation">
+        <span>Linear = source of truth &mdash; what &amp; why (human-scale)</span>
+        <span>Local tasks = execution state &mdash; how (agent-scale)</span>
+      </div>
+    </div>
+
+    <!-- Typical Flow Trace -->
+    <div class="section-label">Typical Feature Flow</div>
+    <div class="flow-trace">
+      <span class="flow-trace-label">Golden Path</span>
+      <a href="feature-dev-linear.html" class="flow-step" data-phase="prep">/feature-dev-linear</a>
+      <span class="flow-arrow">&rarr;</span>
+      <a href="validate-issue.html" class="flow-step" data-phase="prep">/validate-issue</a>
+      <span class="flow-arrow">&rarr;</span>
+      <a href="execute-issue.html" class="flow-step" data-phase="build">/execute-issue</a>
+      <span class="flow-arrow">&rarr;</span>
+      <a href="verify-worktree.html" class="flow-step" data-phase="review">/verify-worktree</a>
+      <span class="flow-arrow">&rarr;</span>
+      <a href="cleanup-worktree.html" class="flow-step" data-phase="deploy">/cleanup-worktree</a>
+      <span class="flow-arrow">&rarr;</span>
+      <a href="revise-claude-md.html" class="flow-step" data-phase="refine">/revise-claude-md</a>
+    </div>
+
+    <!-- Pipeline -->
+    <div class="section-label">Development Pipeline</div>
+    <div class="pipeline-band">
+      <div class="pipeline-grid">
+
+        <!-- Prep -->
+        <div class="phase-card" data-phase="prep">
+          <div class="phase-header">
+            <div class="phase-number">01</div>
+            <div class="phase-name">Prep</div>
+            <div class="phase-subtitle">Configure, Plan</div>
+          </div>
+          <div class="phase-divider"></div>
+          <div class="phase-commands">
+            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/init</span></div>
+            <div class="cmd-desc">Initialize CLAUDE.md</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/project-status</span></div>
+            <div class="cmd-desc">Linear + GitHub + git summary</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/checkout-work</span></div>
+            <div class="cmd-desc">Resolve ref &rarr; worktree</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/create-plan-from-issue</span></div>
+            <div class="cmd-desc">Draft plan, post questions</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/validate-issue</span></div>
+            <div class="cmd-desc">Make issue execution-ready</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/pull-issue-responses</span></div>
+            <div class="cmd-desc">Summarize Q&amp;A threads</div>
+
+            <div class="cmd-item"><span class="cmd-badge shell"></span><span class="cmd-name">new-tree</span></div>
+            <div class="cmd-desc">Create worktree + branch</div>
+
+            <div class="cmd-item"><span class="cmd-badge shell"></span><span class="cmd-name">plan-tree</span></div>
+            <div class="cmd-desc">Worktree + execution prompt</div>
+          </div>
+        </div>
+
+        <!-- Build -->
+        <div class="phase-card" data-phase="build">
+          <div class="phase-header">
+            <div class="phase-number">02</div>
+            <div class="phase-name">Build</div>
+            <div class="phase-subtitle">Implementation</div>
+          </div>
+          <div class="phase-divider"></div>
+          <div class="phase-commands">
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/execute-issue</span></div>
+            <div class="cmd-desc">Parallel agents, commits, PR</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/execute-plan</span></div>
+            <div class="cmd-desc">Local plan &rarr; tasks + PR</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/feature-dev-linear</span></div>
+            <div class="cmd-desc">Plan, decompose, create issues</div>
+
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/feature-dev</span></div>
+            <div class="cmd-desc">Guided feature development</div>
+
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/commit</span></div>
+            <div class="cmd-desc">Create a git commit</div>
+          </div>
+        </div>
+
+        <!-- Review -->
+        <div class="phase-card" data-phase="review">
+          <div class="phase-header">
+            <div class="phase-number">03</div>
+            <div class="phase-name">Review</div>
+            <div class="phase-subtitle">Verify</div>
+          </div>
+          <div class="phase-divider"></div>
+          <div class="phase-commands">
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/codebase-review</span></div>
+            <div class="cmd-desc">Full codebase health scan</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/verify-worktree</span></div>
+            <div class="cmd-desc">Merge main, resolve, test</div>
+
+            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/review</span></div>
+            <div class="cmd-desc">Quick PR review</div>
+
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/pr-review-toolkit</span></div>
+            <div class="cmd-desc">Multi-agent specialist review</div>
+
+            <div class="cmd-item"><span class="cmd-badge claude"></span><span class="cmd-name">/security-review</span></div>
+            <div class="cmd-desc">Security scan of changes</div>
+
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/simplify</span></div>
+            <div class="cmd-desc">Code quality + reuse check</div>
+          </div>
+        </div>
+
+        <!-- Deploy -->
+        <div class="phase-card" data-phase="deploy">
+          <div class="phase-header">
+            <div class="phase-number">04</div>
+            <div class="phase-name">Deploy</div>
+            <div class="phase-subtitle">Ship</div>
+          </div>
+          <div class="phase-divider"></div>
+          <div class="phase-commands">
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/commit-push-pr</span></div>
+            <div class="cmd-desc">Commit, push, open PR</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/cleanup-worktree</span></div>
+            <div class="cmd-desc">Merge to main, clean up</div>
+          </div>
+        </div>
+
+        <!-- Refine -->
+        <div class="phase-card" data-phase="refine">
+          <div class="phase-header">
+            <div class="phase-number">05</div>
+            <div class="phase-name">Refine</div>
+            <div class="phase-subtitle">Automate</div>
+          </div>
+          <div class="phase-divider"></div>
+          <div class="phase-commands">
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/revise-claude-md</span></div>
+            <div class="cmd-desc">Update CLAUDE.md with learnings</div>
+
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/claude-md-improver</span></div>
+            <div class="cmd-desc">Audit CLAUDE.md files</div>
+
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/automation-recommender</span></div>
+            <div class="cmd-desc">Suggest Claude Code automations</div>
+
+            <div class="cmd-item"><span class="cmd-badge custom"></span><span class="cmd-name">/git-xray</span></div>
+            <div class="cmd-desc">Git history diagnostics</div>
+
+            <div class="cmd-item"><span class="cmd-badge plugin"></span><span class="cmd-name">/clean_gone</span></div>
+            <div class="cmd-desc">Remove stale branches</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Infrastructure -->
+    <div class="section-label">Infrastructure</div>
+    <div class="infra-inner">
+
+      <div class="infra-card">
+        <div class="infra-title">Git Branching</div>
+        <div class="branch-diagram">
+          <div class="branch-line">
+            <span class="branch-dot main"></span>
+            <span class="branch-label">main</span>
+            <span class="branch-note">&larr; manual promotion</span>
+          </div>
+          <div class="branch-line" style="padding-left: 18px;">
+            <span class="branch-dot staging"></span>
+            <span class="branch-label">staging</span>
+            <span class="branch-note">&larr; receives PRs</span>
+          </div>
+          <div class="branch-line" style="padding-left: 36px;">
+            <span class="branch-dot work"></span>
+            <span class="branch-label">work-&lt;issue-id&gt;</span>
+            <span class="branch-note">&larr; one per issue</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-title">Parallel Dispatch</div>
+        <ul class="infra-list">
+          <li>One worktree per feature/issue</li>
+          <li>Independent tasks run simultaneously</li>
+          <li>File overlap prevents parallel execution</li>
+          <li>Cross-task context via task metadata</li>
+          <li>One commit per task, never batch</li>
+        </ul>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-title">Guards &amp; Hooks</div>
+        <ul class="infra-list">
+          <li>No grep/cat/find via Bash &mdash; use tools</li>
+          <li>No literal ~/... paths &mdash; use absolute</li>
+          <li>Test before commit, always</li>
+          <li>Agents target staging, never main</li>
+          <li>Agents never merge their own PRs</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="section-label">External Systems</div>
+    <div class="infra-band">
+
+      <div class="ext-system linear">
+        <div class="ext-title">
+          <span class="ext-icon linear">Li</span>
+          Linear
+        </div>
+        <div class="ext-items">
+          <div class="ext-item">Initiatives &amp; Projects (PRDs)</div>
+          <div class="ext-item">Issues with task checklists</div>
+          <div class="ext-item">Comments &amp; clarification threads</div>
+          <div class="ext-item">Status tracking (Todo &rarr; Done)</div>
+        </div>
+        <div class="ext-connects">
+          <div class="ext-connects-label">Connected Commands</div>
+          <div class="ext-cmd-list">
+            <span class="ext-cmd">/project-status</span>
+            <span class="ext-cmd">/create-plan-from-issue</span>
+            <span class="ext-cmd">/validate-issue</span>
+            <span class="ext-cmd">/pull-issue-responses</span>
+            <span class="ext-cmd">/execute-issue</span>
+            <span class="ext-cmd">/feature-dev-linear</span>
+            <span class="ext-cmd">/cleanup-worktree</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ext-system github">
+        <div class="ext-title">
+          <span class="ext-icon github">GH</span>
+          GitHub
+        </div>
+        <div class="ext-items">
+          <div class="ext-item">Repositories &amp; branches</div>
+          <div class="ext-item">Pull requests</div>
+          <div class="ext-item">PR review comments</div>
+          <div class="ext-item">CI / Actions</div>
+        </div>
+        <div class="ext-connects">
+          <div class="ext-connects-label">Connected Commands</div>
+          <div class="ext-cmd-list">
+            <span class="ext-cmd">/commit-push-pr</span>
+            <span class="ext-cmd">/execute-issue</span>
+            <span class="ext-cmd">/review</span>
+            <span class="ext-cmd">/pr-review-toolkit:review-pr</span>
+            <span class="ext-cmd">/project-status</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ext-system git">
+        <div class="ext-title">
+          <span class="ext-icon git">Gt</span>
+          Git (Local)
+        </div>
+        <div class="ext-items">
+          <div class="ext-item">Worktrees (one per feature)</div>
+          <div class="ext-item">Branches: main &larr; staging &larr; work-*</div>
+          <div class="ext-item">Commits (one per task)</div>
+          <div class="ext-item">CLAUDE.md / CLAUDE.local.md</div>
+        </div>
+        <div class="ext-connects">
+          <div class="ext-connects-label">Connected Commands</div>
+          <div class="ext-cmd-list">
+            <span class="ext-cmd">/checkout-work</span>
+            <span class="ext-cmd">/execute-issue</span>
+            <span class="ext-cmd">/verify-worktree</span>
+            <span class="ext-cmd">/cleanup-worktree</span>
+            <span class="ext-cmd">new-tree</span>
+            <span class="ext-cmd">/commit</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ext-system local">
+        <div class="ext-title">
+          <span class="ext-icon local">Lc</span>
+          Local State
+        </div>
+        <div class="ext-items">
+          <div class="ext-item">~/.claude/tasks/ (agent execution)</div>
+          <div class="ext-item">~/.myai/ (guidelines, templates)</div>
+          <div class="ext-item">~/.claude/settings.json (hooks, perms)</div>
+          <div class="ext-item">Plan files (.md)</div>
+        </div>
+        <div class="ext-connects">
+          <div class="ext-connects-label">Connected Commands</div>
+          <div class="ext-cmd-list">
+            <span class="ext-cmd">/execute-plan</span>
+            <span class="ext-cmd">/init</span>
+            <span class="ext-cmd">/claude-md-management:revise-claude-md</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><span class="cmd-badge custom"></span> custom (this repo)</div>
+      <div class="legend-item"><span class="cmd-badge shell"></span> shell (.zshrc)</div>
+      <div class="legend-item"><span class="cmd-badge claude"></span> claude (built-in)</div>
+      <div class="legend-item"><span class="cmd-badge plugin"></span> plugin (marketplace)</div>
+      <div class="legend-item"><span class="cmd-badge script"></span> script (~/.myai/tools)</div>
+    </div>
+
+  </div>
+</body>
+</html>

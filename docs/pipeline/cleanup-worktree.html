@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>/cleanup-worktree — Golden Path</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f5f6f8; --card: #ffffff; --text: #1a1a2e; --text-muted: #5a5a7a;
+      --text-light: #8a8aaa; --border: #e2e4e8;
+      --phase: #b86a3d; --phase-light: #f8f0e8;
+      --human: #2d7d6b; --human-light: #e4f2ee;
+      --agent: #4a5da8; --agent-light: #e8ecf6;
+      --external: #7a5a8a; --external-light: #f0eaf4;
+      --gate: #c4792a; --gate-light: #fdf3e8;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 32px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    .breadcrumb a { color: var(--phase); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .title-bar { margin-bottom: 8px; }
+    .title-bar h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .title-bar h1 code { font-family: 'JetBrains Mono', monospace; color: var(--phase); }
+    .title-bar p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+    .meta-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .meta-chip { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
+    .meta-chip.phase { background: var(--phase-light); color: var(--phase); }
+    .meta-chip.input { background: #f0f1f4; color: var(--text-muted); }
+    .meta-chip.output { background: #f0f1f4; color: var(--text-muted); }
+    .swimlane { display: grid; grid-template-columns: 72px 200px 1fr 200px; gap: 0; }
+    .lane-header { padding: 10px 12px; text-align: center; font-size: 12px; font-weight: 700; border-bottom: 2px solid var(--border); margin-bottom: 6px; }
+    .lane-header.phase-col { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+    .lane-header.human { color: var(--human); border-bottom-color: var(--human); }
+    .lane-header.agent { color: var(--agent); border-bottom-color: var(--agent); }
+    .lane-header.external { color: var(--external); border-bottom-color: var(--external); }
+    .phase-bracket { display: flex; align-items: center; justify-content: center; writing-mode: vertical-lr; transform: rotate(180deg); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-right: 3px solid var(--phase); padding: 6px 4px; background: var(--phase-light); color: var(--phase); }
+    .step-cell { padding: 6px 10px; display: flex; align-items: center; min-height: 44px; border-bottom: 1px solid #f0f1f4; }
+    .step-cell.empty {}
+    .event { border-radius: 8px; padding: 8px 12px; font-size: 12px; width: 100%; }
+    .event.human { background: var(--human-light); border-left: 3px solid var(--human); }
+    .event.agent { background: var(--agent-light); border-left: 3px solid var(--agent); }
+    .event.external { background: var(--external-light); border-left: 3px solid var(--external); }
+    .event.gate { background: var(--gate-light); border-left: 3px solid var(--gate); }
+    .event .event-text { font-size: 12px; color: var(--text); }
+    .event .event-detail { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+    .event .event-cmd { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--agent); display: block; margin-top: 2px; }
+    .ext-badges { display: flex; gap: 4px; margin-top: 4px; }
+    .ext-badge { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 3px; color: white; }
+    .ext-badge.linear { background: #5e6ad2; }
+    .ext-badge.git { background: #f05033; }
+    .gate-label { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gate); background: var(--gate-light); padding: 2px 6px; border-radius: 3px; margin-top: 4px; }
+    .nav-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .nav-link { font-size: 13px; color: var(--phase); text-decoration: none; font-weight: 500; }
+    .nav-link:hover { text-decoration: underline; }
+    .nav-link.next { margin-left: auto; }
+    .legend { display: flex; justify-content: center; gap: 16px; margin-top: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+    .legend-dot.human { background: var(--human); }
+    .legend-dot.agent { background: var(--agent); }
+    .legend-dot.external { background: var(--external); }
+    .legend-dot.gate { background: var(--gate); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="breadcrumb"><a href="index.html">Pipeline</a> &rsaquo; Golden Path &rsaquo; /cleanup-worktree</div>
+
+  <div class="title-bar">
+    <h1><code>/cleanup-worktree</code></h1>
+    <p>Merge a verified branch into main, remove the worktree and branch, update Linear</p>
+  </div>
+
+  <div class="meta-row">
+    <span class="meta-chip phase">04 Deploy</span>
+    <span class="meta-chip input">Input: run from worktree; optional Linear issue ID</span>
+    <span class="meta-chip output">Output: branch in main, worktree removed, Linear Done</span>
+  </div>
+
+  <div class="swimlane">
+    <div class="lane-header phase-col">Step</div>
+    <div class="lane-header human">Human</div>
+    <div class="lane-header agent">Claude Code Agent</div>
+    <div class="lane-header external">External Systems</div>
+
+    <!-- Validate -->
+    <div class="phase-bracket" style="grid-row: span 1;">Check</div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Validates: not on main, no uncommitted changes</div>
+        <div class="event-detail">Records branch name and worktree path</div>
+        <span class="event-cmd">git status, git branch --show-current</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Branch and status checked</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span></div>
+      </div>
+    </div>
+
+    <!-- Verify up to date -->
+    <div class="phase-bracket" style="grid-row: span 2;">Verify</div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Shows commits to merge and checks if main is ahead</div>
+        <div class="event-detail">If main ahead: stops and requires /verify-worktree first</div>
+        <span class="event-cmd">git log main..HEAD, git log HEAD..main</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Commit comparison</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell">
+      <div class="event gate">
+        <div class="event-text">Reviews commit list, confirms merge</div>
+        <span class="gate-label">Required</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell empty"></div>
+
+    <!-- Merge -->
+    <div class="phase-bracket" style="grid-row: span 1;">Merge</div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Switches to main repo, checks out main, merges branch</div>
+        <div class="event-detail">Uses git worktree list to find main working tree path</div>
+        <span class="event-cmd">git checkout main && git merge $BRANCH</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Branch merged into main</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span></div>
+      </div>
+    </div>
+
+    <!-- Clean up -->
+    <div class="phase-bracket" style="grid-row: span 1;">Clean</div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Removes worktree and deletes branch</div>
+        <div class="event-detail">Warns if branch delete fails with "not fully merged"</div>
+        <span class="event-cmd">git worktree remove $PATH && git branch -d $BRANCH</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Worktree removed, branch deleted</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span></div>
+      </div>
+    </div>
+
+    <!-- Linear update -->
+    <div class="phase-bracket" style="grid-row: span 1;">Update</div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">If issue ID provided: posts merge summary, moves to Done</div>
+        <div class="event-detail">Comment includes branch name, commit count, summary from git log</div>
+        <span class="event-cmd">mcp__linear__save_comment, save_issue</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Issue &rarr; Done, merge comment posted</div>
+        <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <!-- Report -->
+    <div class="phase-bracket" style="grid-row: span 1;">Report</div>
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Summary: branch merged, worktree removed, Linear updated</div>
+        <div class="event-detail">Current state: on main, working directory clean</div>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+  </div>
+
+  <div class="nav-footer">
+    <a href="verify-worktree.html" class="nav-link">&larr; /verify-worktree</a>
+    <a href="revise-claude-md.html" class="nav-link next">Next: /revise-claude-md &rarr;</a>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot human"></span> Human</div>
+    <div class="legend-item"><span class="legend-dot agent"></span> Agent</div>
+    <div class="legend-item"><span class="legend-dot external"></span> External</div>
+    <div class="legend-item"><span class="legend-dot gate"></span> Decision gate</div>
+  </div>
+</div>
+</body>
+</html>
