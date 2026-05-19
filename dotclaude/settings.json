@@ -151,42 +151,6 @@
     "command": "sh $HOME/.claude/statusline-command.sh"
   },
   "sandbox": {
-    "enabled": true,
-    "failIfUnavailable": true,
-    "allowUnsandboxedCommands": false,
-    "autoAllowBashIfSandboxed": false,
-    "filesystem": {
-      "allowWrite": [
-        "./",
-        "~/tmp/agentics",
-        ".git/worktrees/"
-      ],
-      "denyRead": [
-        "~/.ssh",
-        "~/.aws",
-        "~/.gnupg"
-      ]
-    },
-    "network": {
-      "allowedDomains": [
-        "github.com",
-        "api.github.com",
-        "github.com-personal",
-        "registry.npmjs.org",
-        "proxy.golang.org",
-        "sum.golang.org",
-        "pypi.org",
-        "files.pythonhosted.org",
-        "api.linear.app",
-        "linear.app",
-        "api.anthropic.com",
-        "registry-1.docker.io",
-        "auth.docker.io",
-        "production.cloudflare.docker.com",
-        "slack.com",
-        "*.slack.com" 
-      ],
-      "deniedDomains": []
-    }
+    "enabled": false
   }
 }
