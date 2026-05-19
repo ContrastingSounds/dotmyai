@@ -38,14 +38,16 @@ Optional Linear issue identifier: $ARGUMENTS
 
 1. Run `gh pr list --head <branch> --state open --json number,title` to find any open PR for the branch.
 2. If no open PR exists, note "No open GitHub PR found — skipping" and continue to Step 5.
-3. If a PR exists, run `gh pr close <number> --comment "Merged to staging locally via /cleanup-worktree"`.
+3. If a PR exists, run `gh pr close <number> --delete-branch --comment "Merged to staging locally via /cleanup-worktree"`. The `--delete-branch` flag removes the remote branch on GitHub.
 4. If `gh` is not available or the repo has no GitHub remote, note this and continue.
 
 ## Step 5: Remove Worktree and Branch
 
 1. Run `git worktree remove <worktree-path>` using the path recorded in Step 1.
-2. Run `git branch -d <branch>` to delete the branch.
-3. Confirm both succeeded. If the branch delete fails with "not fully merged", warn the user — this indicates something went wrong.
+2. If Step 4 did not delete the remote branch (no PR found, or `gh` unavailable), run `git push origin --delete <branch>` to remove it. If the remote branch doesn't exist, note this and continue.
+3. Run `git fetch --prune` to clean up stale remote tracking references.
+4. Run `git branch -d <branch>` to delete the local branch.
+5. Confirm all succeeded. If the branch delete fails with "not fully merged", warn the user — this indicates something went wrong.
 
 ## Step 6: Update Linear (Graceful)
 
