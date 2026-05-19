@@ -1,0 +1,128 @@
+---
+description: Summarise project status from Linear, GitHub, and git. Shows recently completed work, planned work with dependencies, git branch/worktree housekeeping, and current concerns.
+argument-hint: Optional project name filter, or "all" for initiative-wide (default: uses CLAUDE.md initiative)
+---
+
+# Project Status
+
+## Input
+
+Project filter: `$ARGUMENTS`
+
+If `$ARGUMENTS` names a specific Linear project, scope to that project only. If blank or "all", discover all projects under the initiative named in CLAUDE.md.
+
+## Step 1: Resolve Projects
+
+Read CLAUDE.md to find the Linear initiative name. Then discover all projects:
+
+```
+mcp__linear__list_projects(initiative: "<initiative name>")
+```
+
+Collect the project names and IDs. If `$ARGUMENTS` names a specific project, filter to that one.
+
+## Step 2: Gather Data
+
+Run all of the following in parallel. Each Linear query runs once per project.
+
+### 2a: Linear — Recently Closed Issues
+
+For each project, fetch issues completed in the last 2 weeks:
+
+```
+mcp__linear__list_issues(project: "<name>", state: "Done", updatedAt: "-P14D")
+```
+
+### 2b: Linear — Open Issues
+
+For each project, fetch all open work across three states:
+
+```
+mcp__linear__list_issues(project: "<name>", state: "In Progress")
+mcp__linear__list_issues(project: "<name>", state: "Todo")
+mcp__linear__list_issues(project: "<name>", state: "Backlog")
+```
+
+### 2c: GitHub PRs
+
+```bash
+gh pr list --state merged --limit 10 --json number,title,state,mergedAt,headRefName,baseRefName
+gh pr list --state open --json number,title,state,createdAt,headRefName,baseRefName
+```
+
+### 2d: Git Activity
+
+```bash
+git log --oneline -20 --all
+```
+
+### 2e: Git Branch & Worktree Audit
+
+```bash
+git branch -vv
+git branch -r
+git worktree list
+git branch --merged staging
+git branch --merged main
+git branch -r --merged staging
+git branch -r --merged main
+```
+
+## Step 3: Parse & Format
+
+If any Linear query returned large JSON, save it to a temp file and pipe through the formatter:
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/format_status.py < /tmp/linear_issues.json
+```
+
+The script groups issues by status, sorts by priority, formats markdown tables, flags high-priority backlog items, and annotates parent/child dependency chains.
+
+If the issue count is small enough to handle inline, skip the script and format directly.
+
+## Step 4: Synthesise
+
+Produce a narrative summary with these sections:
+
+### 4a: Recently Completed Work
+
+Cross-reference Done issues (from Step 2a) with merged PRs (from Step 2c). Present as:
+- A table of merged PRs with their associated Linear issue IDs
+- Key Linear issues closed, grouped by project
+
+### 4b: Work Planned
+
+Present open issues (from Step 2b) grouped by project, then by state (In Progress first, then Todo, then Backlog). Within each group, sort by priority. For each issue:
+- Show ID, priority, title, and parent issue if any
+- If a parent issue has some children Done and some still open, note which are unblocked
+- Flag high-priority items (Urgent/High) prominently
+
+### 4c: Git Housekeeping
+
+From Step 2e, identify:
+- **Branches safe to delete**: local and remote branches that are fully merged into staging or main. Cross-reference with merged PR state — a branch whose PR is merged is a strong deletion candidate.
+- **Active worktrees**: list any active worktrees and their branches
+- **Stale `claude/` branches**: remote branches prefixed with `claude/` that are merged or have no corresponding open PR
+
+Present as a concise list with recommended cleanup commands (but do NOT execute them).
+
+### 4d: Current Concerns
+
+Analyse the data to surface:
+- Highest-priority open issues that should be tackled next
+- Issues that are now unblocked (their blockers recently completed)
+- staging/main branch drift (PRs merged to staging but not promoted to main)
+- Missing prerequisites (e.g., Studio issues waiting on backend endpoints that don't exist yet)
+- Data races, security issues, or other P1 items in the backlog
+
+## Step 5: Output
+
+Render the full summary to the user as a single markdown document with clear section headers.
+
+## Rules
+
+- **Read-only**: This skill gathers and reports. It does not modify any files, branches, issues, or PRs.
+- **Scoped queries**: Always filter Linear queries by project and state. Never fetch all issues across the entire team.
+- **Recently closed = last 2 weeks**: Use `updatedAt: "-P14D"` for Done issues, not all-time.
+- **Cross-reference**: Always cross-reference Linear issues with GitHub PRs and git branches where possible.
+- **No cleanup execution**: The git housekeeping section recommends cleanup commands but never runs them.
