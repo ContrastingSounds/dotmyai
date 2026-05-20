@@ -25,23 +25,15 @@ Bring the current worktree branch up to date with staging, resolve any conflicts
    - After all conflicts are resolved, stage the resolved files and complete the merge commit.
 4. If the merge is clean, confirm this to the user.
 
-## Step 3: Run Tests
+## Step 3: Run Validation
 
-Run the following tests to verify the branch is healthy after merging staging:
+Verify the branch is healthy after merging staging:
 
-```bash
-go test ./pkg/fsm/ -v
-```
-
-```bash
-go run main.go -testAll -test "" simulations/PaymentProcessor/mock-machine.yaml
-```
-
-If the user provided a simulation YAML path as an argument (`$ARGUMENTS`), also run:
-
-```bash
-go run main.go -testAll -test "" $ARGUMENTS
-```
+1. Detect the project's language and build system (check for `go.mod`, `Package.swift`, `package.json`, `pyproject.toml`, `Makefile`, etc.).
+2. Run the project's build command (e.g., `go build ./...`, `swift build`, `npm run build`, `uv run python -m py_compile ...`).
+3. Run the project's test suite (e.g., `go test ./...`, `swift test`, `npm test`, `uv run pytest`).
+4. If the project's CLAUDE.md specifies particular validation commands, run those instead.
+5. If the user provided `$ARGUMENTS`, interpret them as additional test targets or flags and run accordingly.
 
 ## Step 4: Report Results
 
