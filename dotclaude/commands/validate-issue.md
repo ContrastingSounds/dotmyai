@@ -64,6 +64,36 @@ Based on the issue description and implementation plan, explore the relevant par
 
 Use the Agent tool with `subagent_type: "Explore"` for broad codebase exploration when needed. For targeted lookups, use Grep/Glob/Read directly.
 
+## Step 4b: Analyze Task Dependencies
+
+Using the codebase knowledge from Step 4, perform a code-level dependency analysis across all tasks identified in the issue description (or sub-issues from Step 2):
+
+### File mapping
+
+For each task, list the specific files it will create or modify. Use actual file paths from the codebase, not package names or directory globs. Record these per-task file lists — they will be included in the task checklist (Step 6) and the Execution Analysis section (Step 7).
+
+### Overlap detection
+
+Compare file lists across tasks. Two tasks that modify the same file must be executed sequentially — never in parallel — to prevent merge conflicts on a shared branch.
+
+### Logical dependency detection
+
+Beyond file overlap, identify ordering constraints:
+- A task that defines new types or interfaces must run before tasks that consume them.
+- A task that creates infrastructure (config, schema, middleware) must run before tasks that depend on it.
+- A task that changes a function signature must run before tasks that call that function.
+
+### Execution wave assignment
+
+Group tasks into execution waves:
+- **Wave 1**: Tasks with no dependencies (can all run in parallel).
+- **Wave 2**: Tasks that depend only on Wave 1 tasks (can run in parallel with each other once Wave 1 completes).
+- Continue until all tasks are assigned.
+
+If all tasks form a single dependency chain, there is one task per wave (fully sequential execution).
+
+Record the file overlap, dependencies, and wave assignments for inclusion in Steps 6 and 7.
+
 ## Step 5: Check for Sub-Issues
 
 Use the `list_issues` results from Step 2 to check whether the issue has sub-issues (children).
@@ -89,7 +119,8 @@ Rewrite or refine the issue description so it contains a **task checklist** wher
 
 ```markdown
 - [ ] **Task N: [Short imperative title]** *(SUB-ID if from a sub-issue)*
-  *TODO*: [Specific description of the change — files to modify, logic to add/change]
+  *TODO*: [Specific description of the change — logic to add/change]
+  *Files*: `path/to/file1.go`, `path/to/file2.go`
   *TEST*: [How to verify this task is correct — specific test command, manual check, or expected output]
   *Then*: Run tests → commit → update Linear
 ```
@@ -98,6 +129,7 @@ Rewrite or refine the issue description so it contains a **task checklist** wher
 
 - Each task must be a single, independently testable unit of work.
 - Tasks should be ordered so that earlier tasks don't depend on later ones.
+- Every task must include a `*Files*:` line listing every file that task will create or modify, using backtick-quoted paths separated by commas. These come from the file mapping in Step 4b.
 - If a task modifies test fixtures or adds new tests, call that out explicitly.
 - Group related changes into one task when they must be committed together (e.g., a struct change and all callers).
 - Keep tasks small enough that each commit is easy to review.
@@ -123,17 +155,39 @@ The final description structure should contain:
 
 - [ ] **Task 1: [Title]** *(CON-43)*
   *TODO*: ...
+  *Files*: `pkg/handler.go`, `pkg/handler_test.go`
   *TEST*: ...
   *Then*: Run test suite → commit → update Linear
 
 - [ ] **Task 2: [Title]** *(CON-44)*
   *TODO*: ...
+  *Files*: `pkg/types.go`, `pkg/service.go`
   *TEST*: ...
   *Then*: Run test suite → commit → update Linear
 
 [...]
 
-## Contraints
+## Execution Analysis
+
+### File Overlap
+[List each pair of tasks that share files, with the shared file(s):
+- Task 1 ↔ Task 3: `pkg/handler.go`
+Or: "No file overlap — all tasks modify distinct files."]
+
+### Dependencies
+[List each dependency with direction and reason:
+- Task 3 → Task 1: file overlap (`pkg/handler.go`)
+- Task 4 → Task 2: logical (defines `FooConfig` consumed by Task 4)
+Or: "No dependencies — all tasks are independent."]
+
+### Execution Order
+[Wave-based execution plan:
+- **Wave 1** (parallel): Task 1, Task 2
+- **Wave 2** (parallel, after Wave 1): Task 3, Task 4
+- **Wave 3** (after Wave 2): Task 5
+Or: "Sequential: Task 1 → Task 2 → Task 3 (single dependency chain)"]
+
+## Constraints
 [Preserved from existing description]
 ```
 
@@ -144,8 +198,9 @@ When tasks come from sub-issues, include the sub-issue identifier in parentheses
 Summarize what was done:
 1. Whether any outstanding questions were found and how they were resolved.
 2. The number of tasks in the checklist, and how many originated from sub-issues.
-3. Any assumptions made or risks flagged.
-4. Suggest next step: "Run `/execute-issue {ID}` to begin execution, or review the updated description in Linear first."
+3. The execution analysis: how many tasks can run in parallel, how many waves, and any file overlaps or dependencies that force sequencing.
+4. Any assumptions made or risks flagged.
+5. Suggest next step: "Run `/execute-issue {ID}` to begin execution, or review the updated description in Linear first."
 
 ## Rules
 

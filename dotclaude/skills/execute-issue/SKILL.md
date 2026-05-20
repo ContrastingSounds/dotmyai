@@ -45,7 +45,7 @@ If `list_issues` returned sub-issues, this is a work package. Each sub-issue is 
 
 Count the `- [ ]` checklist items in the issue description.
 
-- **4+ items, no sub-issues**: Offer to create sub-issues. If the user agrees, create one per checklist item:
+- **4+ items**: Create sub-issues automatically — do not prompt the developer. For each checklist item:
 
 ```
 mcp__linear__save_issue(
@@ -59,9 +59,13 @@ mcp__linear__save_issue(
 )
 ```
 
+Set `blockedBy` relations between sub-issues using the dependency information:
+1. **If the description contains a `## Execution Analysis` section**: parse the `### Dependencies` subsection to extract task-to-task ordering. Map task numbers to the sub-issues just created and set `blockedBy` accordingly.
+2. **If no Execution Analysis exists**: extract `*Files*:` lines from each checklist item, detect file overlap and logical dependencies, and set `blockedBy` between sub-issues that share files or have ordering constraints. If checklist items lack `*Files*:` lines, infer files from the task TODO descriptions.
+
 Then continue as a Work Package.
 
-- **Fewer than 4 items**: Work through the checklist items directly. No sub-issues needed.
+- **Fewer than 4 items**: Work through the checklist items directly. No sub-issues needed. If an `## Execution Analysis` section exists, use its execution order for task sequencing.
 
 ### Pre-flight checks (both modes)
 
@@ -85,14 +89,23 @@ If the subagent reports that it could not resolve outstanding questions (user in
 
 ### Work Package mode
 
-For each sub-issue, read its description to identify files that will be modified.
+Check the parent issue description for a `## Execution Analysis` section.
 
-Determine execution order based on:
-1. **Existing blocking relations** in Linear (from `includeRelations`).
-2. **File overlap**: Tasks modifying the same file must be chained (never run two agents on the same file).
-3. **Logical dependencies**: Types/interfaces before consumers. Infrastructure before features.
+**If Execution Analysis exists**: Use the pre-computed dependency information:
+1. Parse the `### Dependencies` subsection to extract task-to-task blocking relations.
+2. Parse the `### Execution Order` subsection to determine wave groupings.
+3. Map task names/numbers from the analysis to sub-issue IDs (match by task number or title).
+4. Supplement with any **existing blocking relations** in Linear (from `includeRelations`) that were set externally.
+5. **Staleness check**: If the analysis references tasks that don't exist, or misses tasks that do exist, fall back to on-the-fly analysis for the unmatched tasks.
 
-Post the execution order on the parent issue:
+**If Execution Analysis does NOT exist** (e.g., sub-issues were created by `/feature-dev-linear`, or the issue was not validated): Fall back to on-the-fly analysis:
+1. For each sub-issue, read its description to identify files that will be modified.
+2. Determine execution order based on:
+   - **Existing blocking relations** in Linear (from `includeRelations`).
+   - **File overlap**: Tasks modifying the same file must be chained (never run two agents on the same file).
+   - **Logical dependencies**: Types/interfaces before consumers. Infrastructure before features.
+
+In both cases, post the execution order on the parent issue:
 
 ```
 mcp__linear__save_comment(
@@ -109,7 +122,7 @@ mcp__linear__save_issue(id: "<parent ID>", state: "In Progress")
 
 ### Single Issue mode
 
-Extract tasks from the checklist. Execute in listed order. Move the issue to In Progress.
+Extract tasks from the checklist. If a `## Execution Analysis` section exists, use its execution order for task sequencing. Otherwise, execute in listed order. Move the issue to In Progress.
 
 ## Step 3b: Create Local Tasks with Dependencies
 
@@ -131,10 +144,10 @@ For each dependency (file overlap, logical dep, Linear blocking relation):
   TaskUpdate(taskId: "<id>", addBlockedBy: ["<dep-task-id>"])
 ```
 
-**Dependency rules**:
-- Tasks sharing any file in their `files` list are chained sequentially via `addBlockedBy`.
-- Linear blocking relations (`blockedBy` from issue relations) map directly to task dependencies.
-- Logical ordering (types before consumers) adds `addBlockedBy` where no file overlap already chains them.
+**Dependency rules** (in priority order):
+1. **Pre-computed analysis**: If a `## Execution Analysis` section exists in the parent description, its `### Dependencies` subsection already accounts for file overlap and logical ordering. Parse it and map to local tasks.
+2. **Linear blocking relations**: `blockedBy` from issue relations may add constraints not captured in the analysis. These always apply.
+3. **On-the-fly analysis** (fallback when no Execution Analysis exists): Tasks sharing any file in their `files` list are chained sequentially via `addBlockedBy`. Logical ordering (types before consumers) adds `addBlockedBy` where no file overlap already chains them.
 
 ## Step 4: Create Worktree
 
