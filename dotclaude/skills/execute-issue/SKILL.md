@@ -177,32 +177,37 @@ EnterWorktree(path: "../${REPO}-${ISSUE_ID}")
 
 All subsequent commands now run from the worktree directory — no `pushd`/`popd` or `cd` needed.
 
-## Step 5: Load Context
+## Step 5: Load Orchestrator Context
 
-Before writing any code, load project context in this order:
+The orchestrator stays lean — it loads only the metadata it needs for dispatch and final validation. Agents load their own implementation context (files, full guidelines, design docs) from fresh contexts.
 
-### 5a: Project CLAUDE.md
+### 5a: Extract build/test commands
 
-Read the project's CLAUDE.md from the worktree root. Extract architecture, testing commands, conventions, and Linear context.
+Read the project's CLAUDE.md from the worktree root. Extract **only**:
+- Test command (e.g., `go test ./...`, `pytest`)
+- Build command (e.g., `go build ./...`, `npm run build`)
+- Lint/format commands (e.g., `gofmt`, `ruff format`)
+- Primary language
 
-### 5b: Language guidelines
+Do NOT read the full file into context. Scan for the commands and stop.
 
-Detect the project's primary language (from CLAUDE.md, file extensions, or go.mod/pyproject.toml/package.json). Read the matching guide from `~/.myai/lang-guides/`:
+### 5b: Identify language guidelines path
+
+Detect the project's primary language (from CLAUDE.md, file extensions, or go.mod/pyproject.toml/package.json). Record the path to the matching guide — do NOT read the file:
 - Go: `~/.myai/lang-guides/go/go-guidelines.md`
 - Python: `~/.myai/lang-guides/python/python-guidelines.md`
 
-### 5c: Design documents
+Store the path as `LANG_GUIDE_PATH` for inclusion in agent prompts.
 
-If a Linear project was identified, fetch PRD and design docs:
+### 5c: Identify design documents
+
+If a Linear project was identified, list the documents but do NOT fetch their content:
 
 ```
 mcp__linear__list_documents(projectId: "<project ID>")
-mcp__linear__get_document(id: "<doc ID>")
 ```
 
-### 5d: Files to be modified
-
-Read all files that will be modified across all tasks. Understand the current implementation before changing anything.
+Record the document IDs and titles. Store as `DESIGN_DOC_IDS` for inclusion in agent prompts. Agents fetch documents they need from their own fresh contexts.
 
 ## Step 6: Execute Tasks (Parallel Dispatch Loop)
 
@@ -242,18 +247,23 @@ Agent(
 ## Cross-task context
 <summary + crossTaskNotes from completed blockers, e.g. 'Task 2 added a RetryCount field to types.go that you need to reference'. Omit if no blockers.>
 
+## Context references
+- Language guidelines: <LANG_GUIDE_PATH or omit if none>
+- Design docs (fetch via mcp__linear__get_document if needed): <DESIGN_DOC_IDS list or omit if none>
+
 ## Instructions
-1. Read the files listed above. Read CLAUDE.md for project conventions.
-2. Implement the change described in the task. Change only what the task requires.
-3. Run validation. If no validation command is specified in the task, run targeted tests for the changed files.
-4. If validation fails, fix and retry. After 3 failed attempts, report the failure with details — do not skip the task.
-5. Run formatters and linters.
-6. Stage specific files and commit:
+1. Read CLAUDE.md for project conventions. Read the language guidelines file listed above. If the task needs architectural context, fetch the relevant design doc by ID.
+2. Read the files listed in 'Files to modify' to understand the current implementation.
+3. Implement the change described in the task. Change only what the task requires.
+4. Run validation. If no validation command is specified in the task, run targeted tests for the changed files.
+5. If validation fails, fix and retry. After 3 failed attempts, report the failure with details — do not skip the task.
+6. Run formatters and linters.
+7. Stage specific files and commit:
    git add <specific files>
    git commit -m '<issue-id>: <imperative description>
 
    Co-Authored-By: Claude <model> <noreply@anthropic.com>'
-7. Report what you changed, which tests passed, and the commit hash."
+8. Report what you changed, which tests passed, and the commit hash."
 )
 ```
 
@@ -299,7 +309,7 @@ go vet ./...
 go build ./...
 ```
 
-Read the test command from CLAUDE.md if available. If any test fails, diagnose and fix before proceeding.
+Use the test/build/lint commands extracted in Step 5a. If any test fails, diagnose and fix before proceeding.
 
 ## Step 8: Push and Raise PR
 
@@ -386,3 +396,4 @@ Summarize:
 - **No pushd/popd or cd**: Use `EnterWorktree`/`ExitWorktree` to switch directories. Never use `pushd`, `popd`, or `cd` to run commands in the worktree.
 - **Ask on ambiguity**: If a task description is unclear or a validation step is missing, ask the user before guessing.
 - **Fail gracefully**: After 3 failed validation attempts, stop, post a blocker comment, and ask the user. Do not block unrelated tasks.
+- **Lean orchestrator**: The orchestrator holds metadata (issue IDs, file lists, dependency graph, test commands) — not content (file bodies, guideline prose, design doc text). Content belongs in agent contexts where it's actually used. Never read implementation files or full docs into the orchestrator.
