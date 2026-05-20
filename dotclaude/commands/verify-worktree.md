@@ -13,7 +13,7 @@ Bring the current worktree branch up to date with staging, resolve any conflicts
 2. Record the current branch name and working directory.
 3. Check for uncommitted changes. If there are any, stop and tell the user: "Please commit or stash your changes before verifying the worktree."
 
-## Step 2: Merge Main into Branch
+## Step 2: Merge Staging into Branch
 
 1. Run `git fetch origin` to ensure we have the latest remote state.
 2. Run `git merge staging` to bring staging's changes into the worktree branch.
