@@ -1,7 +1,6 @@
 ---
 description: Execute a local plan file — create tasks with dependencies, work through them with maximum parallelism, test and commit each task separately.
 argument-hint: path to plan file (e.g. ~/.claude/plans/my-plan.md)
-disable-model-invocation: true
 ---
 
 # Execute Plan

@@ -1,7 +1,6 @@
 ---
 description: Execute a work package (parent issue with sub-issues) or a single issue. Creates a worktree from staging, works through tasks with tests, commits, and Linear updates, then raises a PR to staging.
 argument-hint: Linear issue identifier (e.g. CON-129)
-disable-model-invocation: true
 ---
 
 # Execute Issue

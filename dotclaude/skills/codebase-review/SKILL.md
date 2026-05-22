@@ -1,7 +1,6 @@
 ---
 description: Review an entire codebase for quality, fitness for purpose, and health. Use when taking stock after many PRs, reviving a neglected project, or getting familiar with a cloned repo.
 argument-hint: Optional focus or maturity (e.g. "prototype", "pkg/fsm", "production-ready check")
-disable-model-invocation: true
 allowed-tools: Bash(git *) Bash(scc *) Bash(bash *)
 ---
 
