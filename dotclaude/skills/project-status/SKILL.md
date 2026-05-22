@@ -25,25 +25,25 @@ Collect the project names and IDs. If `$ARGUMENTS` names a specific project, fil
 
 ## Step 2: Gather Data
 
-Run all of the following in parallel. Each Linear query runs once per project.
+Run all of the following in parallel. Each Linear query runs once per project resolved in Step 1. Always pass the project name or ID from Step 1 as the filter — never query by team.
 
 ### 2a: Linear — Recently Closed Issues
 
-For each project, fetch issues completed or cancelled in the last 2 weeks:
+For each project resolved in Step 1, fetch issues completed or cancelled in the last 2 weeks:
 
 ```
-mcp__linear__list_issues(project: "<name>", state: "Done", updatedAt: "-P14D")
-mcp__linear__list_issues(project: "<name>", state: "Cancelled", updatedAt: "-P14D")
+mcp__linear__list_issues(project: "<project name or ID from Step 1>", state: "Done", updatedAt: "-P14D")
+mcp__linear__list_issues(project: "<project name or ID from Step 1>", state: "Cancelled", updatedAt: "-P14D")
 ```
 
 ### 2b: Linear — Open Issues
 
-For each project, fetch all open work across three states:
+For each project resolved in Step 1, fetch all open work across three states:
 
 ```
-mcp__linear__list_issues(project: "<name>", state: "In Progress")
-mcp__linear__list_issues(project: "<name>", state: "Todo")
-mcp__linear__list_issues(project: "<name>", state: "Backlog")
+mcp__linear__list_issues(project: "<project name or ID from Step 1>", state: "In Progress")
+mcp__linear__list_issues(project: "<project name or ID from Step 1>", state: "Todo")
+mcp__linear__list_issues(project: "<project name or ID from Step 1>", state: "Backlog")
 ```
 
 ### 2c: GitHub PRs
@@ -62,6 +62,7 @@ git log --oneline -20 --all
 ### 2e: Git Branch & Worktree Audit
 
 ```bash
+git fetch --quiet
 git branch -vv
 git branch -r
 git worktree list
@@ -149,7 +150,7 @@ Render the full summary to the user as a single markdown document with clear sec
 ## Rules
 
 - **Read-only**: This skill gathers and reports. It does not modify any files, branches, issues, or PRs.
-- **Scoped queries**: Always filter Linear queries by project and state. Never fetch all issues across the entire team.
+- **Scoped queries**: Always filter Linear queries by project (using project names/IDs resolved in Step 1) and state. Never query by team — team-scoped queries pull issues from unrelated projects.
 - **Recently closed = last 2 weeks**: Use `updatedAt: "-P14D"` for Done and Cancelled issues, not all-time.
 - **Cross-reference**: Always cross-reference Linear issues with GitHub PRs and git branches where possible.
 - **No cleanup execution**: The git housekeeping section recommends cleanup commands but never runs them.

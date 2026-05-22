@@ -1,11 +1,11 @@
 ---
-description: Merge a verified worktree branch into staging, close the GitHub PR and Linear issue, remove the worktree, and delete the branch.
+description: Merge a verified worktree branch into staging, merge the GitHub PR, update the Linear issue, remove the worktree, and delete the branch.
 argument-hint: (optional) Linear issue ID (e.g. CON-42) to mark as Done
 ---
 
 # Cleanup Worktree
 
-Merge a completed and verified worktree branch into staging, close related GitHub and Linear items, then clean up the worktree and branch. This command assumes `/verify-worktree` has already been run successfully.
+Merge a completed and verified worktree branch into staging, merge the GitHub PR, update the Linear issue, then clean up the worktree and branch. This command assumes `/verify-worktree` has already been run successfully.
 
 Each external step (GitHub, Linear) fails gracefully — if there's no PR or no issue, skip that step and continue.
 
@@ -34,17 +34,17 @@ Optional Linear issue identifier: $ARGUMENTS
 4. Run `git merge <branch>` (use the branch name recorded in Step 1).
 5. Confirm the merge succeeded. If it fails (it shouldn't if verify-worktree was run), stop and report the error.
 
-## Step 4: Close GitHub PR (Graceful)
+## Step 4: Merge GitHub PR (Graceful)
 
 1. Run `gh pr list --head <branch> --state open --json number,title` to find any open PR for the branch.
 2. If no open PR exists, note "No open GitHub PR found — skipping" and continue to Step 5.
-3. If a PR exists, run `gh pr close <number> --delete-branch --comment "Merged to staging locally via /cleanup-worktree"`. The `--delete-branch` flag removes the remote branch on GitHub.
+3. If a PR exists, run `gh pr merge <number> --merge --delete-branch --body "Merged to staging locally via /cleanup-worktree"`. The `--merge` flag creates a merge commit on GitHub, and `--delete-branch` removes the remote branch.
 4. If `gh` is not available or the repo has no GitHub remote, note this and continue.
 
 ## Step 5: Remove Worktree and Branch
 
 1. Run `git worktree remove <worktree-path>` using the path recorded in Step 1.
-2. If Step 4 did not delete the remote branch (no PR found, or `gh` unavailable), run `git push origin --delete <branch>` to remove it. If the remote branch doesn't exist, note this and continue.
+2. If Step 4 did not delete the remote branch (no PR found, or `gh` unavailable), run `git push origin --delete <branch>` to remove it remotely. If the remote branch doesn't exist, note this and continue.
 3. Run `git fetch --prune` to clean up stale remote tracking references.
 4. Run `git branch -d <branch>` to delete the local branch.
 5. Confirm all succeeded. If the branch delete fails with "not fully merged", warn the user — this indicates something went wrong.
@@ -71,7 +71,7 @@ Once an identifier is resolved:
 Summarize what was done:
 
 1. Branch merged into staging
-2. GitHub PR closed (or skipped — state why)
+2. GitHub PR merged (or skipped — state why)
 3. Worktree removed
 4. Branch deleted
 5. Linear issue updated (or skipped — state why)
