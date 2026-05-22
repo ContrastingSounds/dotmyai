@@ -360,10 +360,10 @@ The worktree and branch remain on disk for the developer to review. Cleanup happ
 
 ## Step 10: Update Linear
 
-Move the parent issue to Needs Verification:
+Move the parent issue to In Review:
 
 ```
-mcp__linear__save_issue(id: "<parent ID>", state: "Needs Verification")
+mcp__linear__save_issue(id: "<parent ID>", state: "In Review")
 ```
 
 Do NOT move to Done — the developer reviews the PR and merges it. Done happens after merge.

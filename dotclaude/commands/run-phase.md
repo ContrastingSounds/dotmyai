@@ -29,7 +29,7 @@ mcp__linear__list_issues(milestone: "<milestone ID>")
 
 Record:
 - The milestone name and root issue (if any).
-- Total issue count and status breakdown (Todo, In Progress, Needs Verification, Done).
+- Total issue count and status breakdown (Todo, In Progress, In Review, Done).
 - The parent/child structure (epics → sub-issues).
 - Which epics have dependency relationships (e.g., Foundation must complete before API Clients).
 
@@ -57,7 +57,7 @@ Run `/project-status` scoped to the target project.
 Parse the output to classify the current state:
 
 1. **In Progress issues**: Issues marked In Progress in Linear. Check whether an active worktree and branch exist for each.
-2. **Needs Verification issues**: Issues marked Needs Verification (have a PR but haven't been verified/cleaned up).
+2. **In Review issues**: Issues marked In Review (have a PR but haven't been verified/cleaned up).
 3. **Concerns**: Any concerns or recommended actions raised by project-status (merge conflicts, staging/main drift, stale branches, failing tests).
 4. **Todo issues**: Unstarted issues, sorted by priority.
 
@@ -77,7 +77,7 @@ An issue is In Progress but we are not in its worktree. A previous session was i
    - If all sub-issues are Done → execution finished but verify/cleanup was skipped. Continue to **Step 6**.
    - If some sub-issues are still Todo or In Progress → resume execution. Continue to **Step 5b**.
 
-#### 4b: Pending verification (Needs Verification issue exists)
+#### 4b: Pending verification (In Review issue exists)
 
 An issue has a PR but hasn't been verified and cleaned up.
 
@@ -136,7 +136,7 @@ Execute-issue handles the full implementation cycle:
 - Runs the full test suite after all tasks.
 - Pushes the branch and raises a PR to staging.
 - Posts the PR link on the Linear issue.
-- Moves the issue to Needs Verification.
+- Moves the issue to In Review.
 
 **If execute-issue fails** (reports a blocker it could not resolve):
 1. Increment `retry_counts[<issue-ID>]`.

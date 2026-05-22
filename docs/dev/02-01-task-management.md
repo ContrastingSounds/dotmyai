@@ -43,12 +43,12 @@ If the issue is not ready, suggest `/validate-issue <ID>` and stop. Do not proce
 | Transition | When | Who |
 |------------|------|-----|
 | Todo → In Progress | Agent begins execution | Agent |
-| In Progress → Needs Verification | Agent raises PR | Agent |
-| Needs Verification → Done | Developer merges PR | Developer |
+| In Progress → In Review | Agent raises PR | Agent |
+| In Review → Done | Developer merges PR | Developer |
 
 For sub-issues within a work package:
 - Each sub-issue moves to Done when its commit lands and tests pass.
-- The parent issue moves to Needs Verification when the PR is raised (not when individual sub-issues complete).
+- The parent issue moves to In Review when the PR is raised (not when individual sub-issues complete).
 
 ### How to update
 
@@ -56,7 +56,7 @@ For sub-issues within a work package:
 mcp__linear__save_issue(id: "<ID>", state: "In Progress")
 ```
 
-Use state names, not IDs. Common states: `Todo`, `In Progress`, `Needs Verification`, `Done`.
+Use state names, not IDs. Common states: `Todo`, `In Progress`, `In Review`, `Done`.
 
 ## Comment Conventions
 
