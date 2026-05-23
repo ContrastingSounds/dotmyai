@@ -8,8 +8,8 @@ Primary languages: Go, Python, TypeScript, SQL.
 
 Read these files when working in the corresponding language:
 
-- **Go**: `~/.myai/guidelines/go-guidelines.md`
-- **Python**: `~/.myai/guidelines/python-guidelines.md`
+- **Go**: `~/.myai/lang-guides/go/go-guidelines.md`
+- **Python**: `~/.myai/lang-guides/python/python-guidelines.md`
 - **Dev workflow**: `~/.myai/DEV_WORKFLOW.md`
 - **Integrations**: `~/.myai/INTEGRATIONS.md`
 

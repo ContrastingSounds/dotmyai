@@ -279,20 +279,40 @@ When agents return, for each:
    - Ask the user for guidance.
    - Do NOT block unrelated tasks — only tasks with a dependency on this one are affected.
 
-### 6d: Update Linear
+### 6d: Update Linear and parent checklist
 
-**Work Package**: Update the sub-issue:
+**Work Package**: Update the sub-issue and tick the parent checklist:
 
 ```
 mcp__linear__save_comment(issueId: "<sub-issue ID>", body: "Completed: <summary from agent>. Validation: <pass/fail>.")
 mcp__linear__save_issue(id: "<sub-issue ID>", state: "Done")
 ```
 
-**Single Issue**: Post progress on the parent:
+Then tick the matching checklist item in the parent issue description:
+
+```
+1. mcp__linear__get_issue(id: "<parent ID>") → extract current description
+2. Find the `- [ ]` line whose text matches the completed sub-issue title
+3. Replace `- [ ]` with `- [x]` for that line
+4. mcp__linear__save_issue(id: "<parent ID>", description: "<updated description>")
+```
+
+**Single Issue**: Post progress and tick the checklist:
 
 ```
 mcp__linear__save_comment(issueId: "<issue ID>", body: "Completed task N: <summary from agent>. Validation: <pass/fail>.")
 ```
+
+Then tick the matching checklist item in the issue description:
+
+```
+1. mcp__linear__get_issue(id: "<issue ID>") → extract current description
+2. Find the `- [ ]` line matching completed task N
+3. Replace `- [ ]` with `- [x]` for that line
+4. mcp__linear__save_issue(id: "<issue ID>", description: "<updated description>")
+```
+
+**Important**: Always re-fetch the description before updating — another task may have ticked a different checkbox since the last read. Match by task title substring, not by line number, to handle concurrent updates safely.
 
 ### 6e: Loop
 
