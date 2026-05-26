@@ -3,6 +3,10 @@
 # Intercepts Bash commands that should use dedicated tools (Read, Glob, Grep, Edit, Write)
 # and denies them with a pointer to the correct tool.
 
+# **IMPORTANT NOTE** THIS HAS BEEN REMOVED FROM DEFAULT SETTINGS DUE TO AMOUNT OF FRICTION IT CAUSES.
+#                    Claude Code is not reliable in choosing to use its own tools, and new Claude
+#                    releases are not reliable in having consistent set of tools available.
+
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 [ -z "$COMMAND" ] && exit 0
