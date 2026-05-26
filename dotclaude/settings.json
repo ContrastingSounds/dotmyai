@@ -1,6 +1,11 @@
 {
   "permissions": {
     "allow": [
+      "mcp__linear__*",
+      "mcp__claude_ai_Linear__*",
+      "mcp__ide__getDiagnostics",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__navigate_page",
+      "mcp__*",
       "Bash(cat *)",
       "Bash(cp *)",
       "Bash(curl *)",
@@ -35,7 +40,6 @@
       "Grep",
       "WebFetch",
       "WebSearch",
-      "mcp__*",
       "Bash(npm run *)",
       "Bash(npm install *)",
       "Bash(npm test *)",
@@ -91,7 +95,7 @@
       "Bash(sudo *)",
       "Bash(chmod *)",
       "Bash(chown *)",
-      "Bash(rm -rf /)*",
+      "Bash(rm -rf *)",
       "Bash(pip *)",
       "Bash(pip3 *)",
       "Bash(python3 -m pip *)",
