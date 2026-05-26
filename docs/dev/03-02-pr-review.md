@@ -136,6 +136,25 @@ Use the pr-test-analyzer to check test coverage for pkg/fsm/eventlog.go
 
 Fix in the writer session/worktree, then re-run `/review` in the review session to verify.
 
+### Fixing review findings with `/execute-issue`
+
+When review produces a batch of fixes — too many to hand-edit quickly, or spanning multiple files — use `/execute-issue` to work through them systematically. Create a Linear issue (or work package with sub-issues) describing the fixes, then execute it from the PR's worktree.
+
+The skill detects that you're on a PR branch and automatically enters **review-fixes mode**: it creates a new worktree branched from the PR branch (not staging), implements and tests each fix, then presents the results and asks whether to merge the fixes back into the PR branch. It hard-stops after that — no further automation.
+
+```
+# From the PR worktree (or mention the PR in the issue/arguments):
+/execute-issue CON-200
+```
+
+This gives you:
+- A separate worktree for the fixes, isolating them from the PR branch until you're ready
+- Parallel agent dispatch for independent fixes (same as standard execute-issue)
+- A clean merge point — review the fix commits before they touch the PR branch
+- A hard stop that waits for your confirmation before merging
+
+The review-fix worktree stays on disk after the skill finishes, so you can inspect the changes, run additional tests, or merge manually if you prefer.
+
 
 ## Capturing Findings in Linear
 

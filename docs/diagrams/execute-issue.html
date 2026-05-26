@@ -88,7 +88,7 @@
   <div class="meta-row">
     <span class="meta-chip phase">02 Build</span>
     <span class="meta-chip input">Input: Linear issue ID (e.g. CON-129)</span>
-    <span class="meta-chip output">Output: PR to staging, all tasks committed, Linear updated</span>
+    <span class="meta-chip output">Output: PR to staging or review fixes merged into existing PR</span>
   </div>
 
   <div class="swimlane">
@@ -98,7 +98,7 @@
     <div class="lane-header external">External Systems</div>
 
     <!-- Fetch & Plan -->
-    <div class="phase-bracket" style="grid-row: span 3;">Plan</div>
+    <div class="phase-bracket" style="grid-row: span 4;">Plan</div>
 
     <div class="step-cell">
       <div class="event human">
@@ -125,6 +125,21 @@
 
     <div class="step-cell empty"></div>
     <div class="step-cell">
+      <div class="event gate">
+        <div class="event-text">Route: staging or PR branch?</div>
+        <div class="event-detail">Three signals: current branch, issue description, developer arguments. Determines base branch for worktree.</div>
+        <div class="gate-label">Decision gate</div>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Checks current branch for open PR</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span><span class="ext-badge github">GitHub</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
       <div class="event agent">
         <div class="event-text">Plans execution order: blocking relations, file overlap, logical deps</div>
         <div class="event-detail">Posts execution order comment. Moves parent to In Progress.</div>
@@ -144,8 +159,9 @@
     <div class="step-cell empty"></div>
     <div class="step-cell">
       <div class="event agent">
-        <div class="event-text">Creates worktree and branch from staging</div>
-        <span class="event-cmd">git worktree add ../$REPO-$ID -b $BRANCH origin/staging</span>
+        <div class="event-text">Creates worktree and branch</div>
+        <div class="event-detail">Standard: from origin/staging. Review fixes: from origin/&lt;pr-branch&gt;.</div>
+        <span class="event-cmd">git worktree add ../$REPO-$ID -b $BRANCH origin/staging|$PR_BRANCH</span>
       </div>
     </div>
     <div class="step-cell">
@@ -231,7 +247,7 @@
     <div class="step-cell empty"></div>
 
     <!-- Validate & Ship -->
-    <div class="phase-bracket" style="grid-row: span 3;">Ship</div>
+    <div class="phase-bracket" style="grid-row: span 3;">Ship<br><span style="font-size: 8px; font-weight: 400; letter-spacing: 0;">(standard)</span></div>
 
     <div class="step-cell empty"></div>
     <div class="step-cell">
@@ -271,6 +287,62 @@
         <div class="ext-badges"><span class="ext-badge linear">Linear</span></div>
       </div>
     </div>
+
+    <!-- Review Fixes Ship -->
+    <div class="phase-bracket" style="grid-row: span 4; background: #fdf3e8; border-right-color: var(--gate); color: var(--gate);">Ship<br><span style="font-size: 8px; font-weight: 400; letter-spacing: 0;">(review fixes)</span></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Pushes review-fix branch, presents commits relative to PR branch</div>
+        <div class="event-detail">Shows commit log, diff stat, fix summary, and target PR link</div>
+        <span class="event-cmd">git push -u origin $BRANCH && git log origin/$PR_BRANCH..HEAD</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Review-fix branch pushed</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell">
+      <div class="event human">
+        <div class="event-text">"Yes, merge" / "No"</div>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event gate">
+        <div class="event-text">Asks developer: merge fixes into PR branch?</div>
+        <div class="event-detail">Developer must confirm before merge proceeds</div>
+        <div class="gate-label">Hard stop — developer decides</div>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">If yes: enters PR worktree, merges review-fix branch, pushes</div>
+        <div class="event-detail">If no: reports worktree location and stops</div>
+        <span class="event-cmd">git merge origin/$BRANCH && git push</span>
+      </div>
+    </div>
+    <div class="step-cell">
+      <div class="event external">
+        <div class="event-text">Fixes merged into PR branch, issue &rarr; Done</div>
+        <div class="ext-badges"><span class="ext-badge git">Git</span><span class="ext-badge linear">Linear</span></div>
+      </div>
+    </div>
+
+    <div class="step-cell empty"></div>
+    <div class="step-cell">
+      <div class="event agent">
+        <div class="event-text">Exits worktree (kept on disk). Hard stop — no further work.</div>
+        <span class="event-cmd">ExitWorktree(action: "keep")</span>
+      </div>
+    </div>
+    <div class="step-cell empty"></div>
   </div>
 
   <div class="nav-footer">
