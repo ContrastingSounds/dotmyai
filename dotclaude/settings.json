@@ -83,7 +83,9 @@
       "Bash(swift build *)",
       "Bash(swift package *)",
       "Bash(./scripts/build.sh *)",
-      "Bash(~/.myai/dotclaude/skills/checkout-work/scripts/checkout-work.sh *)"
+      "Bash(~/.myai/dotclaude/skills/checkout-work/scripts/checkout-work.sh *)",
+      "Bash(magick identify:*)",
+      "Bash(magick:*)"
     ],
     "deny": [
       "Bash(sudo *)",
