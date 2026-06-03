@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1"
+  },
   "permissions": {
     "allow": [
       "mcp__linear__*",
@@ -103,10 +106,6 @@
       "Bash(git reset --hard *)"
     ]
   },
-  "model": "claude-opus-4-6",
-  "env": {
-    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1"
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -119,6 +118,10 @@
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "sh $HOME/.claude/statusline-command.sh"
   },
   "enabledPlugins": {
     "agent-sdk-dev@claude-plugins-official": true,
@@ -146,13 +149,10 @@
     "playwright@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true
   },
-  "effortLevel": "high",
-  "skipDangerousModePermissionPrompt": true,
-  "statusLine": {
-    "type": "command",
-    "command": "sh $HOME/.claude/statusline-command.sh"
-  },
   "sandbox": {
     "enabled": false
-  }
+  },
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true
 }
