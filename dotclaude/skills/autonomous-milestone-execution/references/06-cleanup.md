@@ -1,12 +1,13 @@
 # 06 · Cleanup (loop step 5)
 
-Merge the verified branch into **local staging**, merge the GitHub PR, tear down
-the worktree and branch, and mark the issue Done. Ported from the cleanup skill,
-rewritten to proceed without the confirmation prompt. Run inline.
+Merge the verified branch into **local staging**, push staging so GitHub
+auto-closes the PR, tear down the worktree and branch, and mark the issue Done.
+Ported from the cleanup skill, rewritten to proceed without the confirmation
+prompt. Run inline.
 
 Assumes `05-verify.md` passed. External steps (GitHub, Linear) fail gracefully —
-if there is no PR or no issue, skip and continue. **Never push staging. Never
-touch main.**
+if there is no PR or no issue, skip and continue. **Push staging so the PR
+auto-closes. Never touch main.**
 
 ## Step 1: Validate environment
 
@@ -36,28 +37,39 @@ In the main repo:
 
 ```bash
 git checkout staging
+git fetch origin
+git merge --ff-only origin/staging   # bring local staging current before pushing
 git merge <branch>
 ```
 
-Proceed without asking. Log the merged commit list (from Step 2) into the Linear
-comment in Step 6 for the audit trail. If the merge fails (it should not after
-verify), defer the issue and report — do not force.
+Proceed without asking. The `--ff-only` step guards the Step 4 push from
+rejection; if it can't fast-forward (local staging diverged from the remote),
+defer the issue and report — do not force. Log the merged commit list (from
+Step 2) into the Linear comment in Step 6 for the audit trail. If the branch
+merge fails (it should not after verify), defer the issue and report — do not
+force.
 
-## Step 4: Merge the GitHub PR (graceful)
+## Step 4: Push staging — GitHub auto-closes the PR (graceful)
+
+Push the merge. GitHub marks the PR **Merged** automatically because its head
+commits are now reachable from the base branch — no `gh pr merge`.
 
 ```bash
-gh pr list --head <branch> --state open --json number,title
+git push origin staging
+gh pr view <branch> --json state   # expect MERGED
 ```
 
-- No open PR → note "no open PR — skipping" and continue.
-- PR exists → `gh pr merge <number> --merge --delete-branch --body "Merged to staging locally via autonomous run"`.
-- `gh` unavailable / no GitHub remote → note it and continue.
+- No GitHub remote / `gh` unavailable → note "no remote — staging kept local"
+  and continue. (The local merge stands.)
+- No open PR for the branch → note "no PR to auto-close — staging pushed" and
+  continue.
+- PR still **OPEN** after the push → do not fall back to `gh pr merge`; note it
+  in the Step 6 Linear/epic comment and continue.
 
 ## Step 5: Remove worktree and branch
 
 ```bash
 git worktree remove <worktree-path>
-# if Step 4 didn't delete the remote branch:
 git push origin --delete <branch>   # ignore "remote branch missing"
 git fetch --prune
 git branch -d <branch>              # safe delete; if it refuses, investigate, do not -D
@@ -72,7 +84,7 @@ Resolve the issue ID (from the loop, or from the branch name pattern
 `[A-Z]+-[0-9]+`). Then:
 
 ```
-mcp__linear__save_comment(issueId: "<ID>", body: "Merged <branch> into staging (<N> commits).\n<brief summary of commits>\nPR: <merged/skipped>.")
+mcp__linear__save_comment(issueId: "<ID>", body: "Merged <branch> into staging (<N> commits).\n<brief summary of commits>\nPR: <auto-closed as merged / skipped / still-open>.")
 mcp__linear__save_issue(id: "<ID>", state: "Done")
 ```
 
@@ -96,7 +108,7 @@ Return to **triage** (`02-triage.md`).
 
 ## Rules (cleanup)
 
-- Merge to **local staging only** — never `git push` staging, never merge to main.
+- Merge locally, then **push `staging`** so the PR auto-closes — never push or merge to `main`.
 - No confirmation gate — proceed, but always log the merged commit list to Linear.
 - Safe delete only (`git branch -d`); investigate refusals, never `-D`.
 - Fail gracefully on GitHub/Linear; never let externals block local teardown.
