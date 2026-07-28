@@ -2,7 +2,7 @@
 
 ## Developer Profile
 
-Primary languages: Go, Python, TypeScript, SQL.
+Primary languages: Go, Python, TypeScript, Rust, SQL.
 
 ## Language Guidelines
 
@@ -32,20 +32,6 @@ Read these files when working in the corresponding language:
 - Prefer `const` over `let`. Never `var`.
 - Use template literals over string concatenation.
 
-### Project Structure
-
-```
-project/
-├── src/
-│   ├── components/     # UI components
-│   ├── lib/            # Shared utilities
-│   ├── pages/          # Route pages (Astro)
-│   └── types/          # Shared type definitions
-├── tests/              # Integration/e2e tests (unit tests colocated with source)
-├── public/             # Static assets
-├── tsconfig.json
-└── package.json
-```
 
 ## SQL & DuckDB
 
@@ -165,6 +151,6 @@ Review only the changes in the PR diff. Findings must be things the PR introduce
 
 - DuckDB for ad hoc data exploration.
 - Linear for project tracking.
-- Prefer stdlib and minimal dependencies across all languages.
+- When given no direction, prefer stdlib and minimal dependencies across all languages, but never ignore plans or instructions to use a library, do not surprise the developer by including or removing libraries without very good reasons.
 - No unnecessary abstractions — write the simple thing first.
 - Prefer to execute multi-step instructions in the order given, though use judgment when a different order is clearly better. The user often wants to see research, summaries, or proposed scripts before implementation begins.
