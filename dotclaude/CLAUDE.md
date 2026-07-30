@@ -151,6 +151,5 @@ Review only the changes in the PR diff. Findings must be things the PR introduce
 
 - DuckDB for ad hoc data exploration.
 - Linear for project tracking.
-- When given no direction, prefer stdlib and minimal dependencies across all languages, but never ignore plans or instructions to use a library, do not surprise the developer by including or removing libraries without very good reasons.
 - No unnecessary abstractions — write the simple thing first.
 - Prefer to execute multi-step instructions in the order given, though use judgment when a different order is clearly better. The user often wants to see research, summaries, or proposed scripts before implementation begins.
