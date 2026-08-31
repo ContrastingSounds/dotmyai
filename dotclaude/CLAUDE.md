@@ -1,5 +1,11 @@
 # Personal CLAUDE.md
 
+## CRITICAL WORKFLOW REQUIREMENTS
+- **NEVER** work on the main or staging branches
+- **ALWAYS** use a worktree
+- The developer **MAY SOMETIMES** tell you to commit safe changes (eg docs) straight to staging, but this is an exception.
+
+
 ## Developer Profile
 
 Primary languages: Go, Python, TypeScript, Rust, SQL.
@@ -10,7 +16,6 @@ Read these files when working in the corresponding language:
 
 - **Go**: `~/.myai/lang-guides/go/go-guidelines.md`
 - **Python**: `~/.myai/lang-guides/python/python-guidelines.md`
-- **Dev workflow**: `~/.myai/DEV_WORKFLOW.md`
 - **Integrations**: `~/.myai/INTEGRATIONS.md`
 
 ## TypeScript Guidelines
@@ -41,8 +46,7 @@ Read these files when working in the corresponding language:
 - Use DuckDB for reading/writing Parquet — not pandas.
 - Use `COPY ... TO` for format conversion (e.g., CSV to Parquet).
 - SQL style: uppercase keywords (`SELECT`, `FROM`, `WHERE`), lowercase identifiers, CTEs over subqueries, trailing commas.
-- For persistent app databases: SQLite (Python) or `database/sql` + sqlc (Go).
-- For analytics backends: ClickHouse.
+- for applications projects, the choice of backend database is made on a per-project basis.
 
 ## Testing Strategy
 
