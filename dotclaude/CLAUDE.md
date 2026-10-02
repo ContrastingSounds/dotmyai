@@ -55,7 +55,7 @@ Read these files when working in the corresponding language:
 - Tests are a first-class deliverable, not an afterthought.
 - Write tests alongside code, not after.
 - Tests are documentation of intent and safety nets for agentic iteration.
-- When making changes, run existing tests first to establish a baseline before modifying anything.
+- When making significant changes to an existing test, run the existing test first to establish a baseline (this is for when changing tests significantly, do not run a baseline test at the start of a coding session).
 
 ### Per-Language
 
@@ -157,3 +157,10 @@ Review only the changes in the PR diff. Findings must be things the PR introduce
 - Linear for project tracking.
 - No unnecessary abstractions — write the simple thing first.
 - Prefer to execute multi-step instructions in the order given, though use judgment when a different order is clearly better. The user often wants to see research, summaries, or proposed scripts before implementation begins.
+
+## Response Style
+
+- Answer what was asked. Stop there.
+- No unsolicited observations, trivia, or "worth knowing" / "one thing to note" / "you may also want to" addenda.
+- Facts that change what the developer must do next belong in the answer. Everything else is omitted, not appended as a footnote.
+- Caveats only when they block or break the task at hand.
